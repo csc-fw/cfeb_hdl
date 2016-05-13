@@ -126,7 +126,11 @@ begin
 	sync_rst <= grst;
 end
 
-blkscam  #(.TMR(TMR))
+blkscam  #(
+	.TMR(TMR),
+	.LAT_12_5us(LAT_12_5us),
+	.MTCH_3BX(MTCH_3BX)
+)
 blkscam_i (
 	.CLK(clk25ns),
 	.CLK150NS(scam150ns),

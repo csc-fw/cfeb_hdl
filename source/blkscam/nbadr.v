@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module nbadr #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter MTCH_3BX = 0
 )(
 	input CLK,
 	input RST,

@@ -19,7 +19,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module blkscam #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter LAT_12_5us = 0,
+	parameter MTCH_3BX = 0
 )(
     input CLK,
     input CLK150NS,
@@ -151,7 +153,10 @@ always @(posedge CLK) begin
 		rst <= RSTIN;
 end
 
-scamcntrl  #(.TMR(TMR))
+scamcntrl  #(
+	.TMR(TMR),
+	.MTCH_3BX(MTCH_3BX)
+)
 scamcntrl_i (
 	.CLK(CLK),
 	.RST(rst),
@@ -179,7 +184,10 @@ scamcntrl_i (
 	.NOLCT(nolct)
 );
 
-nbadr #(.TMR(TMR))
+nbadr #(
+	.TMR(TMR),
+	.MTCH_3BX(MTCH_3BX)
+)
 nbadr_i(
 	.CLK(CLK),
 	.RST(rst),
@@ -229,7 +237,11 @@ fifo1_i(
 	.DLSCAFULL(dlscafull)
 );
 
-rdcntrl #(.TMR(TMR))
+rdcntrl #(
+	.TMR(TMR),
+	.LAT_12_5us(LAT_12_5us),
+	.MTCH_3BX(MTCH_3BX)
+)
 rdcntrl_i(
 	.CLK(CLK),
 	.RST(rst),
@@ -264,7 +276,10 @@ rdcntrl_i(
 	.L1ANUM(l1anum)
 );
 
-readout #(.TMR(TMR))
+readout #(
+	.TMR(TMR),
+	.MTCH_3BX(MTCH_3BX)
+)
 readout_i(
 	.C25(CLK),
 	.CLK(CLK150NS),

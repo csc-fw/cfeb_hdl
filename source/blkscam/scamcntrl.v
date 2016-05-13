@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module scamcntrl #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter MTCH_3BX = 0
 )(
 	input CLK,
 	input RST,
@@ -51,17 +52,30 @@ wire lctsave;
 wire [3:0] lctinblk;
 reg lct_frst;
 reg lct_scnd;
+reg lct_thrd;
 wire llct;
 
+generate
+if(MTCH_3BX==1) 
+begin : selpaths_3bx
+	assign SELC      = DONE & SCND_BLK & !SCND_SHARED & !NODATA &(STATE == 4'd2);
+	assign SELD      = DONE & SCND_BLK & !FB_NODATA & (STATE == 4'd4);
+	assign llct      = lct_frst | lct_scnd;
+end
+else
+begin : selpaths_nbx
+	assign SELC      = DONE & !NODATA &(STATE == 4'd2);
+	assign SELD      = 1'b0;
+	assign llct      = lct_frst | lct_scnd | lct_thrd;
+end
+endgenerate
+
 assign lctsave   = |{lctinblk,LCTDLY}; // OR reduction.
-assign llct      = lct_frst | lct_scnd;
 assign LCTYENA   = llct & (STATE == 4'd14); 
 assign NOLCT     = !llct & !DSCAFULL & (STATE == 4'd14); 
 assign PREBLKEND = (STATE == 4'd13);
 assign SELA      = (STATE == 4'd5);
 assign SELB      = NOGTRG & !DLSCAFULL & (STATE == 4'd3);
-assign SELC      = DONE & SCND_BLK & !SCND_SHARED & !NODATA &(STATE == 4'd2);
-assign SELD      = DONE & SCND_BLK & !FB_NODATA & (STATE == 4'd4);
 assign ENAREG    = (STATE == 4'd15);
 assign NBSEL     = (STATE == 4'd14);
 assign WRENA     = SELA | SELB | SELC | SELD | NOLCT;
@@ -75,12 +89,14 @@ always @(posedge CLK or posedge RST) begin
 		begin
 			lct_frst <= 1'b0;
 			lct_scnd <= 1'b0;
+			lct_thrd <= 1'b0;
 		end
 	else
 		if(PREBLKEND)
 			begin
 				lct_frst <= lctsave;
 				lct_scnd <= lct_frst;
+				lct_thrd <= lct_scnd;
 			end
 end
 

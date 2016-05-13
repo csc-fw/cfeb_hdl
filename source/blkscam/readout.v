@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module readout #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter MTCH_3BX = 0
 )(
 	input C25,
 	input CLK,

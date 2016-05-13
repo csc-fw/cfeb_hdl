@@ -19,7 +19,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module rdcntrl #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter LAT_12_5us = 0,
+	parameter MTCH_3BX = 0
 )(
 	input CLK,
 	input RST,
@@ -141,7 +143,11 @@ l1an_fifo_i(
 	.L1ANUM(L1ANUM)
 );
 
-trigreg #(.TMR(TMR))
+trigreg #(
+	.TMR(TMR),
+	.LAT_12_5us(LAT_12_5us),
+	.MTCH_3BX(MTCH_3BX)
+)
 trigreg_i(
 	.CLK(CLK),
 	.RST(RST),
