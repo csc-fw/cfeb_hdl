@@ -5,7 +5,7 @@
 // 
 // Create Date:    14:19:14 01/05/2015 
 // Design Name: 
-// Module Name:    cfeb12_5_lat_hdl_sim_top
+// Module Name:    cfeb_hdl 
 // Project Name: 
 // Target Devices: 
 // Tool versions: 
@@ -19,49 +19,48 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-module cfeb12_5_lat_hdl_sim_top #(
-	parameter TMR = 0
+module cfeb_hdl #(
+	parameter TMR = 1,
+	parameter LAT_12_5us = 1,
+	parameter MTCH_3BX = 1,
+	parameter TRG_DCD = 0
 )(
-	input TDI,
-	input TMS,
-	input TCK,
-	input LCT,
-	input GTRG,
-	input CMSCLK,
-	input CMPCLK,
-	input GLOBAL_RST,
-	input [12:0] ADC1B,
-	input [12:0] ADC2B,
-	input [12:0] ADC3B,
-	input [12:0] ADC4B,
-	input [12:0] ADC5B,
-	input [12:0] ADC6B,
-	input [6:1] AMPOUT,
-	input CMPFDBK,
-	inout DMYSHIFT,
-	output TDO,
-	output reg RDENA_B,
-	output MOVLAP,
-	output DATAAVAIL,
-	output [3:0] CHADR,
-	output [6:0] RADR,
-	output [6:0] WADR,
-	output LPUSH_B,
-	output ENDWORD,
-	output SCAWRITE,
-	output ADC150NS,
-	output CMPRST,
-	output [15:0] OUT,
-	output OVERLAP,
-	output CMPMUX,
-	output DACCLK,
-	output DACDAT,
-	output DAC_ENB_B,
-	output [1:0] CMODE,
-	output [2:0] CTIME,
-	output [6:1] AMPIN,
-	output [6:1] AMPCLK,
-	output [7:0] LEDS
+    input LCT,
+    input GTRG,
+    input CMSCLK,
+    input CMPCLK,
+    input GLOBAL_RST,
+    input [12:0] ADC1B,
+    input [12:0] ADC2B,
+    input [12:0] ADC3B,
+    input [12:0] ADC4B,
+    input [12:0] ADC5B,
+    input [12:0] ADC6B,
+    input [6:1] AMPOUT,
+    input CMPFDBK,
+    inout DMYSHIFT,
+    output reg RDENA_B,
+    output MOVLAP,
+    output DATAAVAIL,
+    output [3:0] CHADR,
+    output [6:0] RADR,
+    output [6:0] WADR,
+    output LPUSH_B,
+    output ENDWORD,
+    output SCAWRITE,
+    output ADC150NS,
+    output CMPRST,
+    output [15:0] OUT,
+    output OVERLAP,
+    output CMPMUX,
+    output DACCLK,
+    output DACDAT,
+    output DAC_ENB_B,
+    output [1:0] CMODE,
+    output [2:0] CTIME,
+    output [6:1] AMPIN,
+    output [6:1] AMPCLK,
+	 output [7:0] LEDS
 );
 
 wire clkin;
@@ -89,11 +88,11 @@ wire [6:1] adcen_b;
 
 wire [3:0] loadpblk;
 wire [1:0] xl1dlyset;
+wire [1:0] jcmode;
+wire [2:0] jctime;
 
 wire drck1;
 wire drck2;
-wire drck1_i;
-wire drck2_i;
 wire jrst;
 wire sel1;
 wire sel2;
@@ -129,13 +128,13 @@ end
 
 blkscam  #(.TMR(TMR))
 blkscam_i (
+	.CLK(clk25ns),
+	.CLK150NS(scam150ns),
+	.RSTIN(sync_rst),
 	.ENBL50(enbl50),
 	.DISBL50(disbl50),
-	.CLK150NS(scam150ns),
 	.RAWLCTIN(LCT),
 	.RAWGTRIG(GTRG),
-	.RSTIN(sync_rst),
-	.CLK(clk25ns),
 	.LOADPBLK(loadpblk),
 	.XL1DLYSET(xl1dlyset),
 	
@@ -206,24 +205,17 @@ blkmux_i (
 );
 
 
-wire tlrst;
-
-BSCAN_VIRTEX_sim BSCAN_VIRTEX_sim_inst (
-	.TDO(TDO),
+BSCAN_VIRTEX BSCAN_VIRTEX_inst (
 	.DRCK1(drck1_i),     // Data register output for USER1 functions
 	.DRCK2(drck2_i),     // Data register output for USER2 functions
-	.RESET(tlrst),     // Reset output from TAP controller
+	.RESET(jrst),     // Reset output from TAP controller
 	.SEL1(sel1),       // USER1 active output
 	.SEL2(sel2),       // USER2 active output
 	.SHIFT(shift),     // SHIFT output from TAP controller
-	.BTDI(btdi),         // TDI output from TAP controller
+	.TDI(btdi),         // TDI output from TAP controller
 	.UPDATE(update),   // UPDATE output from TAP controller
 	.TDO1(tdo1),       // Data input for USER1 function
-	.TDO2(tdo2),        // Data input for USER2 function
-	.TCK(TCK),
-	.TMS(TMS),
-	.TRST(grst),
-	.TDI(TDI)
+	.TDO2(tdo2)        // Data input for USER2 function
 );
 
 BUFG jclk_buf1 (
@@ -237,7 +229,7 @@ BUFG jclk_buf2 (
 );
 
 jtag #(
-	.TMR(0)
+	.TMR(TMR)
 )
 jtag_i (
 	.CLK25(clk25ns),
@@ -259,8 +251,8 @@ jtag_i (
 	.DMYSHIFT(DMYSHIFT),
 	.LOADPBLK(loadpblk),
 	.XL1DLYSET(xl1dlyset),
-	.CMODE(CMODE),
-	.CTIME(CTIME),
+	.CMODE(jcmode),
+	.CTIME(jctime),
 	.AMPIN(AMPIN),
 	.AMPCLK(AMPCLK)
 );

@@ -5,14 +5,14 @@
 // Engineer:
 //
 // Create Date:   14:20:55 02/11/2015
-// Design Name:   cfeb12_5_lat_hdl_sim_top
-// Module Name:   C:/Users/bylsma/Projects/CFEB/Firmware/cfeb12_5us_lat_hdl/source/cfeb12_5_lat_hdl_sim.v
-// Project Name:  cfeb12_5us_lat_hdl
+// Design Name:   cfeb_hdl_sim_top
+// Module Name:   C:/Users/bylsma/Projects/CFEB/Firmware/cfeb_hdl/source/cfeb_hdl_sim.v
+// Project Name:  cfeb_hdl
 // Target Device:  
 // Tool versions:  
 // Description: 
 //
-// Verilog Test Fixture created by ISE for module: cfeb12_5_lat_hdl_sim_top
+// Verilog Test Fixture created by ISE for module: cfeb_hdl_sim_top
 //
 // Dependencies:
 // 
@@ -22,7 +22,7 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module cfeb12_5_lat_hdl_sim2;
+module cfeb_hdl_sim2;
 
 	// Inputs
 	reg TDI;
@@ -71,7 +71,7 @@ module cfeb12_5_lat_hdl_sim2;
 	wire DMYSHIFT;
 
 	// Instantiate the Unit Under Test (UUT)
-	cfeb12_5_lat_hdl_sim_top #(
+	cfeb_hdl_sim_top #(
 		.TMR(1'b0)
 	) uut (
 		.TDI(TDI), 
