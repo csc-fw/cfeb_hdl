@@ -19,36 +19,37 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module blkscam #(
-	parameter TMR = 0,
-	parameter LAT_12_5us = 0,
-	parameter MTCH_3BX = 0
+	parameter TMR = 0
 )(
-    input CLK,
-    input CLK150NS,
-    input RSTIN,
-    input ENBL50,
-    input DISBL50,
-    input RAWLCTIN,
-    input RAWGTRIG,
-    input [3:0] LOADPBLK,
-    input [1:0] XL1DLYSET,
-    output RDENA_B,
-    output PUSH,
-    output MOVERLAP,
-    output DATAAVAIL,
-    output OVLPINT,
-    output LASTWORD,
-    output ERRLOAD,
-    output XCHECK,
-    output OECRCMUX,
-    output reg [15:0] DATAOUT,
-    output [3:0] AD,
-    output [6:0] ADR,
-    output [6:0] OWADR,
-    output [5:0] L1ANOUT,
-    output [23:0] STATUS,
-	 output [7:0] LEDS
-    );
+	input CLK,
+	input CLK150NS,
+	input RSTIN,
+	input ENBL50,
+	input DISBL50,
+	input RAWLCTIN,
+	input RAWGTRIG,
+	input LAT_12_5US,
+	input MTCH_3BX,
+	input [3:0] LOADPBLK,
+	input [1:0] XL1DLYSET,
+	
+	output RDENA_B,
+	output PUSH,
+	output MOVERLAP,
+	output DATAAVAIL,
+	output OVLPINT,
+	output LASTWORD,
+	output ERRLOAD,
+	output XCHECK,
+	output OECRCMUX,
+	output reg [15:0] DATAOUT,
+	output [3:0] AD,
+	output [6:0] ADR,
+	output [6:0] OWADR,
+	output [5:0] L1ANOUT,
+	output [23:0] STATUS,
+	output [7:0] LEDS
+);
 
 reg rst;
 reg lct;
@@ -154,8 +155,7 @@ always @(posedge CLK) begin
 end
 
 scamcntrl  #(
-	.TMR(TMR),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 scamcntrl_i (
 	.CLK(CLK),
@@ -170,6 +170,7 @@ scamcntrl_i (
 	.SCND_SHARED(scnd_shared),
 	.DLSCAFULL(dlscafull),
 	.DSCAFULL(vdscafull),
+	.MTCH_3BX(MTCH_3BX),
 	
 	.STATE(state),
 	.LCTYENA(lctyena),
@@ -185,8 +186,7 @@ scamcntrl_i (
 );
 
 nbadr #(
-	.TMR(TMR),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 nbadr_i(
 	.CLK(CLK),
@@ -238,9 +238,7 @@ fifo1_i(
 );
 
 rdcntrl #(
-	.TMR(TMR),
-	.LAT_12_5us(LAT_12_5us),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 rdcntrl_i(
 	.CLK(CLK),
@@ -258,6 +256,8 @@ rdcntrl_i(
 	.LOADPBLK(LOADPBLK),
 	.BLKIN(badr),
 	.POPL1AN(popl1an),
+	.LAT_12_5US(LAT_12_5US),
+	.MTCH_3BX(MTCH_3BX),
 
 	.PFIFO1(pfifo1),
 	.FULL(full3),
@@ -277,8 +277,7 @@ rdcntrl_i(
 );
 
 readout #(
-	.TMR(TMR),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 readout_i(
 	.C25(CLK),

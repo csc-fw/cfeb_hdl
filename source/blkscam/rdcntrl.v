@@ -19,9 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module rdcntrl #(
-	parameter TMR = 0,
-	parameter LAT_12_5us = 0,
-	parameter MTCH_3BX = 0
+	parameter TMR = 0
 )(
 	input CLK,
 	input RST,
@@ -38,11 +36,13 @@ module rdcntrl #(
 	input [3:0] LOADPBLK,
 	input [3:0] BLKIN,
 	input POPL1AN,
+	input LAT_12_5US,
+	input MTCH_3BX,
 
 	output PFIFO1,
 	output FULL,
 	output DGSCAFULL,
-	output NOGTRG,
+	output reg NOGTRG,
 	output TEMPTY,
 	output SCND_BLK,
 	output SCND_SHARED,
@@ -80,10 +80,10 @@ reg g1,g2,g3;
 wire pbend_1;
 wire state1;
 wire state3;
-wire lnogtrg;
-wire yesgtrg;
+reg  lnogtrg;
+reg  yesgtrg;
 wire f3_scnd_shared;
-wire f3push;
+reg  f3push;
 wire f3mt;
 reg  df3mt;
 wire l1mt;
@@ -98,22 +98,21 @@ wire dmyq4;
 wire dmyq5;
 wire dmyq6;
 
-generate
-if(MTCH_3BX==1) 
-begin : f3log_3bx
-	assign lnogtrg = l2 | l3;
-	assign yesgtrg = f2 | f3;
-	assign f3push  = yesgtrg;
-	assign NOGTRG  = lnogtrg & !yesgtrg;
+always @*
+begin
+	if(MTCH_3BX==1) begin
+		lnogtrg = l2 | l3;
+		yesgtrg = f2 | f3;
+		f3push  = yesgtrg;
+		NOGTRG  = lnogtrg & !yesgtrg;
+	end
+	else begin
+		lnogtrg = l2 | l3 | l4;
+		yesgtrg = f2 | f3 | f4;
+		f3push  = g2 | g3;
+		NOGTRG  = (lnogtrg & !yesgtrg) | (yesgtrg & !f3push);
+	end
 end
-else
-begin : f3log_nbx
-	assign lnogtrg = l2 | l3 | l4;
-	assign yesgtrg = f2 | f3 | f4;
-	assign f3push  = g2 | g3;
-	assign NOGTRG  = (lnogtrg & !yesgtrg) | (yesgtrg & !f3push);
-end
-endgenerate
 
 assign pbend_1 = (STATE == 4'd12);
 assign state1  = (STATE == 4'd1);
@@ -162,15 +161,15 @@ l1an_fifo_i(
 );
 
 trigreg #(
-	.TMR(TMR),
-	.LAT_12_5us(LAT_12_5us),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 trigreg_i(
 	.CLK(CLK),
 	.RST(RST),
 	.LCT_SRL1(LCT_SRL1),
 	.GIN(GTRG),
+	.LAT_12_5US(LAT_12_5US),
+	.MTCH_3BX(MTCH_3BX),
 	.XL1DLYSET(XL1DLYSET),
 	.MATCHR(matchd),
 	.NO_MATCH(no_matchd),

@@ -19,14 +19,14 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module trigreg #(
-	parameter TMR = 0,
-	parameter LAT_12_5us = 0,
-	parameter MTCH_3BX = 0
+	parameter TMR = 0
 )(
 	input CLK,
 	input RST,
 	input LCT_SRL1,
 	input GIN,
+	input LAT_12_5US,
+	input MTCH_3BX,
 	input [1:0] XL1DLYSET,
 	output reg MATCHR,
 	output reg NO_MATCH,
@@ -41,6 +41,8 @@ reg lct_fdc3;
 wire lct_srl2;
 wire lct_srl3;
 wire l1dly0;
+wire l1dly0a;
+wire l1dly0b;
 wire l1dly1;
 wire l1dly2;
 wire l1dly3;
@@ -49,20 +51,20 @@ reg llout0;
 reg llout_p1;
 reg llout_p2;
 reg llout_p3;
-wire lct_window;
-wire l1a_window;
+reg lct_window;
+reg l1a_window;
 wire prematch;
 wire match_disable;
 wire pmatch;
 wire pmiss;
-wire pno;
+reg pno;
 reg  pno_p1;
 reg  pno_p2;
-wire pyes;
+reg pyes;
 reg  pyes_p1;
 reg  pyes_p2;
-wire no_match_1;
-wire matchr_1;
+reg no_match_1;
+reg matchr_1;
 reg gin1;
 reg gin2;
 reg gin3;
@@ -77,26 +79,25 @@ initial begin
 	lct_fdc3 = 0;
 end
 
-generate
-if(MTCH_3BX==1) 
-begin : mtchlog_3bx
-	assign lct_window = llout_m1 | llout0 | llout_p1;
-	assign l1a_window = GIN | gin1 | gin2;
-	assign pno        = llout0 & !l1a_window;
-	assign pyes       = llout0 &  l1a_window;
-	assign no_match_1 = pno_p2;
-	assign matchr_1   = pyes_p2;
+always @*
+begin
+	if(MTCH_3BX==1) begin
+		lct_window = llout_m1 | llout0 | llout_p1;
+		l1a_window = GIN | gin1 | gin2;
+		pno        = llout0 & !l1a_window;
+		pyes       = llout0 &  l1a_window;
+		no_match_1 = pno_p2;
+		matchr_1   = pyes_p2;
+	end
+	else begin
+		lct_window = llout_m1 | llout0 | llout_p1 | llout_p2 | llout_p3;
+		l1a_window = GIN | gin1 | gin2 | gin3 | gin4;
+		pno        = llout_p2 & !l1a_window;
+		pyes       = llout_p2 &  l1a_window;
+		no_match_1 = pno;
+		matchr_1   = pyes;
+	end
 end
-else
-begin : mtchlog_nbx
-	assign lct_window = llout_m1 | llout0 | llout_p1 | llout_p2 | llout_p3;
-	assign l1a_window = GIN | gin1 | gin2 | gin3 | gin4;
-	assign pno        = llout_p2 & !l1a_window;
-	assign pyes       = llout_p2 &  l1a_window;
-	assign no_match_1 = pno;
-	assign matchr_1   = pyes;
-end
-endgenerate
 
 assign prematch      = lct_window & gin1;
 assign match_disable = overlap & !medge;
@@ -144,16 +145,9 @@ end
 //srl_nx1 #(.Depth(16))  lct_delay_1i (.CLK(CLK),.CE(1'b1),.I(LIN),     .O(lct_srl1)); // Moved up to blkscam level
 srl_nx1 #(.Depth(16))  lct_delay_2i (.CLK(CLK),.CE(1'b1),.I(lct_fdc1),.O(lct_srl2));
 srl_nx1 #(.Depth(16))  lct_delay_3i (.CLK(CLK),.CE(1'b1),.I(lct_fdc2),.O(lct_srl3));
-generate
-if(LAT_12_5us==1) 
-begin : lat_12_5us
-	srl_nx1 #(.Depth(432)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(lct_fdc3),.O(l1dly0));
-end
-else
-begin : lat_3_2us
-	srl_nx1 #(.Depth(64)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(lct_fdc3),.O(l1dly0));
-end
-endgenerate
+srl_nx1 #(.Depth(64)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(lct_fdc3),.O(l1dly0a)); // use l1dly0a for  3.2us L1A latency
+srl_nx1 #(.Depth(368)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(l1dly0a),.O(l1dly0b)); // use l1dly0b for 12.5us L1A latency
+assign l1dly0 = LAT_12_5US ? l1dly0b : l1dly0a;
 srl_nx1 #(.Depth(16))  lct_delay_5i (.CLK(CLK),.CE(1'b1),.I(l1dly0),  .O(l1dly1));
 srl_nx1 #(.Depth(16))  lct_delay_6i (.CLK(CLK),.CE(1'b1),.I(l1dly1),  .O(l1dly2));
 srl_nx1 #(.Depth(16))  lct_delay_7i (.CLK(CLK),.CE(1'b1),.I(l1dly2),  .O(l1dly3));

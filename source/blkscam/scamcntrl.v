@@ -19,8 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module scamcntrl #(
-	parameter TMR = 0,
-	parameter MTCH_3BX = 0
+	parameter TMR = 0
 )(
 	input CLK,
 	input RST,
@@ -34,13 +33,14 @@ module scamcntrl #(
 	input SCND_SHARED,
 	input DLSCAFULL,
 	input DSCAFULL,
+	input MTCH_3BX,
 
 	output [3:0] STATE,
 	output LCTYENA,
 	output SELA,
 	output SELB,
-	output SELC,
-	output SELD,
+	output reg SELC,
+	output reg SELD,
 	output WRENA,
 	output ENAREG,
 	output PREBLKEND,
@@ -53,22 +53,21 @@ wire [3:0] lctinblk;
 reg lct_frst;
 reg lct_scnd;
 reg lct_thrd;
-wire llct;
+reg llct;
 
-generate
-if(MTCH_3BX==1) 
-begin : selpaths_3bx
-	assign SELC      = DONE & SCND_BLK & !SCND_SHARED & !NODATA &(STATE == 4'd2);
-	assign SELD      = DONE & SCND_BLK & !FB_NODATA & (STATE == 4'd4);
-	assign llct      = lct_frst | lct_scnd;
+always @*
+begin
+	if(MTCH_3BX==1) begin
+		SELC      = DONE & SCND_BLK & !SCND_SHARED & !NODATA &(STATE == 4'd2);
+		SELD      = DONE & SCND_BLK & !FB_NODATA & (STATE == 4'd4);
+		llct      = lct_frst | lct_scnd;
+	end
+	else begin
+		SELC      = DONE & !NODATA &(STATE == 4'd2);
+		SELD      = 1'b0;
+		llct      = lct_frst | lct_scnd | lct_thrd;
+	end
 end
-else
-begin : selpaths_nbx
-	assign SELC      = DONE & !NODATA &(STATE == 4'd2);
-	assign SELD      = 1'b0;
-	assign llct      = lct_frst | lct_scnd | lct_thrd;
-end
-endgenerate
 
 assign lctsave   = |{lctinblk,LCTDLY}; // OR reduction.
 assign LCTYENA   = llct & (STATE == 4'd14); 

@@ -31,7 +31,7 @@
 //    3   | Check CFEB status, Capture and shift
 //    4   | Program Comparator DAC
 //    5   | Load extra L1A delay
-//    6   | 
+//    6   | Load cfeb_config register with TRG_DCD,MTCH_3BX,LAT_12_5US
 //    7   | Load f5, f8, and f9
 //    8   | Load PRE_BLOCK_END
 //    9   | Load Comparator MODE and TIME
@@ -59,6 +59,9 @@ module jtag #(
 	output DACDAT,
 	output DAC_ENB_B,
 	inout  DMYSHIFT,
+	output TRG_DCD,
+	output MTCH_3BX,
+	output LAT_12_5US,
 	output [3:0] LOADPBLK,
 	output [1:0] XL1DLYSET,
 	output [1:0] CMODE,
@@ -73,6 +76,7 @@ reg [7:0] dcmd;
 wire lxdlyout;
 wire pbeout;
 wire tdof232;
+wire tdof62;
 wire tdof82;
 wire tdof92;
 wire tdofa2;
@@ -80,14 +84,16 @@ wire tdofb2;
 wire tdof52;
 wire dsy7;	
 wire dmy2;	
+wire dmy3;	
+wire dmy4;	
 wire dshift;
 reg dly_update;
 wire [6:1] bky_mask;
 
 initial dcmd = 0;
 
-assign TDO2 = tdof232 | tdof82 | tdof92 | tdofa2 | tdofb2 | tdof52;
-assign jstatus = {5'b10110,XL1DLYSET,LOADPBLK,CTIME,CMODE};
+assign TDO2 = tdof232 | tdof62 | tdof82 | tdof92 | tdofa2 | tdofb2 | tdof52;
+assign jstatus = {2'b10,TRG_DCD,MTCH_3BX,LAT_12_5US,XL1DLYSET,LOADPBLK,CTIME,CMODE};
 assign TDO1 = dcmd[0];
 
 //
@@ -262,6 +268,26 @@ bky_shift1 (
 	.TDO(tdofb2)        // Test data out of the complete loop
 );
 		
+
+//
+// JTAG configuration register
+// selects operating mode -- 4 bits {reserved,trg_decode,3bx_matching,12.5us L1A latency}
+//
+user_wr_reg #(.width(4), .def_value(4'b0000), .TMR(TMR))
+cfeb_config (
+	.CLK25(CLK25),
+	.DRCK(DRCK2),        // Data Reg Clock
+	.FSEL(f[6]),        // Function select
+	.SEL(SEL2),        // User 2 mode active
+	.TDI(BTDI),         // Serial Test Data In
+	.DSY_IN(1'b0),    // Serial Daisy chained data in
+	.SHIFT(SHIFT),      // Shift state
+	.UPDATE(UPDATE),    // Update state
+	.RST(RST),          // Reset default state
+	.DSY_CHAIN(1'b0),   // Daisy chain mode
+	.PO({dmy3,TRG_DCD,MTCH_3BX,LAT_12_5US}), // Parallel output
+	.TDO(tdof62),        // Serial Test Data Out
+	.DSY_OUT(dmy4));  // Daisy chained serial data out
 
 
 

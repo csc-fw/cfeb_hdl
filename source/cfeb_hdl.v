@@ -20,10 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module cfeb_hdl #(
-	parameter TMR = 1,
-	parameter LAT_12_5us = 1,
-	parameter MTCH_3BX = 1,
-	parameter TRG_DCD = 0
+	parameter TMR = 1
 )(
     input LCT,
     input GTRG,
@@ -102,6 +99,10 @@ wire update;
 wire tdo1;
 wire tdo2;
 
+wire trg_dcd;
+wire mtch_3bx;
+wire lat_12_5us;
+
 
 IBUFG CMSCLK_BUF(.O(clkin),.I(CMSCLK));
 
@@ -127,9 +128,7 @@ begin
 end
 
 blkscam  #(
-	.TMR(TMR),
-	.LAT_12_5us(LAT_12_5us),
-	.MTCH_3BX(MTCH_3BX)
+	.TMR(TMR)
 )
 blkscam_i (
 	.CLK(clk25ns),
@@ -141,6 +140,8 @@ blkscam_i (
 	.RAWGTRIG(GTRG),
 	.LOADPBLK(loadpblk),
 	.XL1DLYSET(xl1dlyset),
+	.LAT_12_5US(lat_12_5us),
+	.MTCH_3BX(mtch_3bx),
 	
 	.RDENA_B(rdena_b),
 	.PUSH(push),
@@ -253,6 +254,9 @@ jtag_i (
 	.DACDAT(DACDAT),
 	.DAC_ENB_B(DAC_ENB_B),
 	.DMYSHIFT(DMYSHIFT),
+	.TRG_DCD(trg_dcd),
+	.MTCH_3BX(mtch_3bx),
+	.LAT_12_5US(lat_12_5us),
 	.LOADPBLK(loadpblk),
 	.XL1DLYSET(xl1dlyset),
 	.CMODE(jcmode),
