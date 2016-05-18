@@ -74,13 +74,16 @@ reg dgmatchr;
 wire matchr_1;
 reg  matchr;
 wire no_match_1;
-reg l1,l2,l3;
-reg f1,f2,f3;
+reg l1,l2,l3,l4;
+reg f1,f2,f3,f4;
+reg g1,g2,g3;
 wire pbend_1;
 wire state1;
 wire state3;
+wire lnogtrg;
 wire yesgtrg;
 wire f3_scnd_shared;
+wire f3push;
 wire f3mt;
 reg  df3mt;
 wire l1mt;
@@ -95,12 +98,27 @@ wire dmyq4;
 wire dmyq5;
 wire dmyq6;
 
+generate
+if(MTCH_3BX==1) 
+begin : f3log_3bx
+	assign lnogtrg = l2 | l3;
+	assign yesgtrg = f2 | f3;
+	assign f3push  = yesgtrg;
+	assign NOGTRG  = lnogtrg & !yesgtrg;
+end
+else
+begin : f3log_nbx
+	assign lnogtrg = l2 | l3 | l4;
+	assign yesgtrg = f2 | f3 | f4;
+	assign f3push  = g2 | g3;
+	assign NOGTRG  = (lnogtrg & !yesgtrg) | (yesgtrg & !f3push);
+end
+endgenerate
+
 assign pbend_1 = (STATE == 4'd12);
 assign state1  = (STATE == 4'd1);
 assign state3  = (STATE == 4'd3);
-assign yesgtrg = f2 | f3;
-assign NOGTRG  = !yesgtrg & (l2 | l3);
-assign PFIFO1  = state3 & (yesgtrg | l2 | l3);
+assign PFIFO1  = state3 & (yesgtrg | lnogtrg);
 assign f3_scnd_shared = f2 & f3;
 assign TEMPTY = f3mt | df3mt;
 
@@ -108,7 +126,7 @@ fifo3 #(.TMR(TMR))
 fifo3_i(
 	.CLK(CLK),
 	.RST(RST),
-	.PUSH(yesgtrg),
+	.PUSH(f3push),
 	.POP(TRGDONE),
 	.CEW(state1),
 	.CER(state3),
@@ -163,15 +181,15 @@ trigreg_i(
 
    
 srl_nx1 #(.Depth(9))   gmatchd_i (.CLK(CLK),.CE(1'b1),.I(gmatch),   .O(gmd));
-srl_nx1 #(.Depth(9))    matchd_i (.CLK(CLK),.CE(1'b1),.I(matchd),   .O(mtd));
-srl_nx1 #(.Depth(9)) no_matchd_i (.CLK(CLK),.CE(1'b1),.I(no_matchd),.O(nmtd));
+srl_nx1 #(.Depth(7))    matchd_i (.CLK(CLK),.CE(1'b1),.I(matchd),   .O(mtd));
+srl_nx1 #(.Depth(7)) no_matchd_i (.CLK(CLK),.CE(1'b1),.I(no_matchd),.O(nmtd));
 
 srl_16dx1   gmatchd_lpb_i (.CLK(CLK),.CE(1'b1),.A({1'b0,LOADPBLK[2:0]}),.I(gmd), .O(gmd_lpb),.Q15(dmyq4));
 srl_16dx1    matchd_lpb_i (.CLK(CLK),.CE(1'b1),.A({1'b0,LOADPBLK[2:0]}),.I(mtd), .O(mtd_lpb),.Q15(dmyq5));
 srl_16dx1 no_matchd_lpb_i (.CLK(CLK),.CE(1'b1),.A({1'b0,LOADPBLK[2:0]}),.I(nmtd),.O(nmtd_lpb),.Q15(dmyq6));
 
-assign gmatchr_1   = LOADPBLK[3] ? gmd_lpb  : gmd;
-assign  matchr_1   = LOADPBLK[3] ? mtd_lpb  : mtd;
+assign gmatchr_1  = LOADPBLK[3] ? gmd_lpb  : gmd;
+assign  matchr_1  = LOADPBLK[3] ? mtd_lpb  : mtd;
 assign no_match_1 = LOADPBLK[3] ? nmtd_lpb : nmtd;
 
 
@@ -202,20 +220,33 @@ always @(posedge CLK or posedge RST) begin
 			l1 <= 1'b0;
 			l2 <= 1'b0;
 			l3 <= 1'b0;
+			l4 <= 1'b0;
 			f1 <= 1'b0;
 			f2 <= 1'b0;
 			f3 <= 1'b0;
+			f4 <= 1'b0;
+			g1 <= 1'b0;
+			g2 <= 1'b0;
+			g3 <= 1'b0;
 		end
 	else
 		begin
 			l1 <= no_match_1 | (l1 & !PBEND);
 			f1 <= matchr_1   | (f1 & !PBEND);
+			g1 <= gmatchr_1  | (11 & !pbend_1);
 			if(PBEND)
 				begin
 					l2 <= l1;
 					l3 <= l2;
+					l4 <= l3;
 					f2 <= f1;
 					f3 <= f2;
+					f4 <= f3;
+				end
+			if(pbend_1)
+				begin
+					g2 <= g1;
+					g3 <= g2;
 				end
 		end
 end
