@@ -32,8 +32,8 @@ module nbadr #(
 	input ENAREG,
 	input ENBL50,
 	input DISBL50,
-	input [3:0] YGTRG,
-	input [3:0] NGTRG,
+	input [3:0] YL1A_ADR,
+	input [3:0] NL1A_ADR,
 	input [3:0] FB_ADR,
 
 	output VDSCAFULL,
@@ -151,8 +151,8 @@ begin : nbadr_TMR
 		case (sel)
 			3'd0: wradr_a = LCTADR[3:0];
 			3'd1: wradr_a = WADR[6:3];
-			3'd2: wradr_a = NGTRG;
-			3'd3: wradr_a = YGTRG;
+			3'd2: wradr_a = NL1A_ADR;
+			3'd3: wradr_a = YL1A_ADR;
 			3'd4: wradr_a = FB_ADR;
 			3'd5: wradr_a = 4'd0;
 			3'd6: wradr_a = 4'd0;
@@ -161,8 +161,8 @@ begin : nbadr_TMR
 		case (sel)
 			3'd0: wradr_b = LCTADR[7:4];
 			3'd1: wradr_b = WADR[6:3];
-			3'd2: wradr_b = NGTRG;
-			3'd3: wradr_b = YGTRG;
+			3'd2: wradr_b = NL1A_ADR;
+			3'd3: wradr_b = YL1A_ADR;
 			3'd4: wradr_b = FB_ADR;
 			3'd5: wradr_b = 4'd0;
 			3'd6: wradr_b = 4'd0;
@@ -171,8 +171,8 @@ begin : nbadr_TMR
 		case (sel)
 			3'd0: wradr_c = LCTADR[11:8];
 			3'd1: wradr_c = WADR[6:3];
-			3'd2: wradr_c = NGTRG;
-			3'd3: wradr_c = YGTRG;
+			3'd2: wradr_c = NL1A_ADR;
+			3'd3: wradr_c = YL1A_ADR;
 			3'd4: wradr_c = FB_ADR;
 			3'd5: wradr_c = 4'd0;
 			3'd6: wradr_c = 4'd0;
@@ -376,8 +376,8 @@ begin : nbadr_noTMR
 		case (sel)
 			3'd0: wradr = LCTADR[3:0];
 			3'd1: wradr = WADR[6:3];
-			3'd2: wradr = NGTRG;
-			3'd3: wradr = YGTRG;
+			3'd2: wradr = NL1A_ADR;
+			3'd3: wradr = YL1A_ADR;
 			3'd4: wradr = FB_ADR;
 			3'd5: wradr = 4'd0;
 			3'd6: wradr = 4'd0;

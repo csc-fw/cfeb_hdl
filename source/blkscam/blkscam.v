@@ -26,8 +26,10 @@ module blkscam #(
 	input RSTIN,
 	input ENBL50,
 	input DISBL50,
-	input RAWLCTIN,
-	input RAWGTRIG,
+	input LCT,
+	input L1A,
+	input L1A_MATCH,
+	input TRG_DCD,
 	input LAT_12_5US,
 	input MTCH_3BX,
 	input [3:0] LOADPBLK,
@@ -52,9 +54,7 @@ module blkscam #(
 );
 
 reg rst;
-reg lct;
 wire lct_srl1;
-reg gtrg;
 wire busy;
 wire nodata;
 wire pfifo1;
@@ -66,7 +66,7 @@ wire xload;
 wire lastwordd;
 
 wire trgdone;
-wire nogtrg;
+wire nol1a;
 wire fb_nodata;
 wire scnd_blk;
 wire scnd_shared;
@@ -111,12 +111,6 @@ wire [7:0] l1pout;
 wire [5:0] l1anum;
 wire [8:1] monitor;
 
-initial begin
-	lct = 0;
-	gtrg = 0;
-	rst = 0;
-end
-
 assign STATUS = {busy,nodata,PUSH,pfifo1,tempty,empty_b,full3,full1,nl1ablk[5:0],nlct[5:0],nfree_blks};
 assign xload = full1 | full3;
 assign LASTWORD = lastwordd | xload;
@@ -141,14 +135,8 @@ always @* begin
 	endcase
 end
 
-assign lctdly    = LOADPBLK[3] ? plct : lct;
-srl_16dx1 lct_pblk_delay_i (.CLK(CLK),.CE(1'b1),.A({1'b0,LOADPBLK[2:0]}),.I(lct),.O(plct),.Q15(lct_srl1));
-
-(* syn_useioff = "True" *)
-always @(posedge CLK) begin
-	lct <= RAWLCTIN;
-	gtrg <= RAWGTRIG;
-end
+assign lctdly    = LOADPBLK[3] ? plct : LCT;
+srl_16dx1 lct_pblk_delay_i (.CLK(CLK),.CE(1'b1),.A({1'b0,LOADPBLK[2:0]}),.I(LCT),.O(plct),.Q15(lct_srl1));
 always @(posedge CLK) begin
 	if(ENBL50)
 		rst <= RSTIN;
@@ -163,7 +151,7 @@ scamcntrl_i (
 	.LCTDLY(lctdly),
 	.LOADPBLK(LOADPBLK),
 	.DONE(trgdone),
-	.NOGTRG(nogtrg),
+	.NOL1A(nol1a),
 	.NODATA(nodata),
 	.FB_NODATA(fb_nodata),
 	.SCND_BLK(scnd_blk),
@@ -200,8 +188,8 @@ nbadr_i(
 	.ENAREG(enareg),
 	.ENBL50(ENBL50),
 	.DISBL50(DISBL50),
-	.YGTRG(rsta),
-	.NGTRG(badr),
+	.YL1A_ADR(rsta),
+	.NL1A_ADR(badr),
 	.FB_ADR(fb_adr),
 
 	.VDSCAFULL(vdscafull),
@@ -218,7 +206,7 @@ fifo1 #(.TMR(TMR))
 fifo1_i(
 	.CLK(CLK),
 	.RST(rst),
-	.LCT(lct),
+	.LCT(LCT),
 	.POP(pfifo1),
 	.PUSH(lctyena),
 	.ENBL50(ENBL50),
@@ -247,7 +235,9 @@ rdcntrl_i(
 	.DISBL50(DISBL50),
 	.PBEND(preblkend),
 	.TRGDONE(trgdone),
-	.GTRG(gtrg),
+	.L1A(L1A),
+	.L1A_MATCH(L1A_MATCH),
+	.TRG_DCD(TRG_DCD),
 	.LCT_SRL1(lct_srl1),
 	.DLSCAFULL(dlscafull),
 	.LCT_PH(lct_phase_in),
@@ -262,7 +252,7 @@ rdcntrl_i(
 	.PFIFO1(pfifo1),
 	.FULL(full3),
 	.DGSCAFULL(dgscafull),
-	.NOGTRG(nogtrg),
+	.NOL1A(nol1a),
 	.TEMPTY(tempty),
 	.SCND_BLK(scnd_blk),
 	.SCND_SHARED(scnd_shared),
@@ -283,7 +273,7 @@ readout_i(
 	.C25(CLK),
 	.CLK(CLK150NS),
 	.RST(rst),
-	.GTRGEMPTY(tempty),
+	.L1AEMPTY(tempty),
 	.SCAFULL(scafull),
 	.DGSCAFULL(dgscafull),
 	.XLOAD(xload),

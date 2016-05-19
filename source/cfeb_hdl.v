@@ -22,11 +22,9 @@
 module cfeb_hdl #(
 	parameter TMR = 1
 )(
-    input LCT,
-    input GTRG,
+    input [2:0] ENC_TRG, //{GLOBAL_RST,L1A,LCT}
     input CMSCLK,
     input CMPCLK,
-    input GLOBAL_RST,
     input [12:0] ADC1B,
     input [12:0] ADC2B,
     input [12:0] ADC3B,
@@ -64,12 +62,10 @@ wire clkin;
 wire cmpclkin;
 wire cmpfdbkin;
 wire cmpmuxout;
-wire grst;
 wire enbl50;
 wire disbl50;
 wire scam150ns;
 wire lockrst;
-reg  sync_rst;
 (* PERIOD = "24ns" *) wire clk25ns;
 wire rdena_b;
 wire push;
@@ -102,7 +98,16 @@ wire tdo2;
 wire trg_dcd;
 wire mtch_3bx;
 wire lat_12_5us;
+reg [2:0]enc_trg;
+reg lct;
+reg l1a;
+reg l1a_match;
+reg resync;
 
+
+initial begin
+	enc_bit = 3'b000;
+end
 
 IBUFG CMSCLK_BUF(.O(clkin),.I(CMSCLK));
 
@@ -110,11 +115,9 @@ IBUFG CMPCLK_BUF(.O(cmpclkin),.I(CMPCLK));
 
 IBUFG CMPFDBK_BUF(.O(cmpfdbkin),.I(CMPFDBK));
 
-IBUF GLOBAL_RST_BUF(.O(grst),.I(GLOBAL_RST));
-
 OBUF CMPMUX_BUF(.O(CMPMUX),.I(cmpmuxout));
 
-OBUF CMPRST_BUF(.O(CMPRST),.I(sync_rst));
+OBUF CMPRST_BUF(.O(CMPRST),.I(resync));
 
 (* syn_useioff = "True" *)
 always @(negedge clk25ns)  // on falling edge
@@ -122,9 +125,29 @@ begin
 	RDENA_B <= rdena_b;
 end
 
-always @(posedge clk25ns)
-begin
-	sync_rst <= grst;
+(* syn_useioff = "True" *)
+always @(posedge CLK) begin
+	enc_trg <= ENC_TRG; // 3bits 
+end
+
+always @* begin
+	if(trg_dcd)
+		case(enc_trg)
+			3'd0: {resync, l1a_match, l1a, lct} = 4'b0000;
+			3'd1: {resync, l1a_match, l1a, lct} = 4'b0001;
+			3'd2: {resync, l1a_match, l1a, lct} = 4'b0011;
+			3'd3: {resync, l1a_match, l1a, lct} = 4'b0111;
+			3'd4: {resync, l1a_match, l1a, lct} = 4'b0010;
+			3'd5: {resync, l1a_match, l1a, lct} = 4'b0110;
+			3'd7: {resync, l1a_match, l1a, lct} = 4'b1000;
+			default: {resync, l1a_match, l1a, lct} = 4'b0000;
+		endcase
+	else begin
+		lct       = enc_trg[0];
+		l1a       = enc_trg[1];
+		l1a_match = enc_trg[1];
+		resync    = enc_trg[2];;
+	end
 end
 
 blkscam  #(
@@ -133,15 +156,17 @@ blkscam  #(
 blkscam_i (
 	.CLK(clk25ns),
 	.CLK150NS(scam150ns),
-	.RSTIN(sync_rst),
+	.RSTIN(resync),
 	.ENBL50(enbl50),
 	.DISBL50(disbl50),
-	.RAWLCTIN(LCT),
-	.RAWGTRIG(GTRG),
-	.LOADPBLK(loadpblk),
-	.XL1DLYSET(xl1dlyset),
+	.LCT(lct),
+	.L1A(l1a),
+	.L1A_MATCH(l1a_match),
+	.TRG_DCD(trg_dcd),
 	.LAT_12_5US(lat_12_5us),
 	.MTCH_3BX(mtch_3bx),
+	.LOADPBLK(loadpblk),
+	.XL1DLYSET(xl1dlyset),
 	
 	.RDENA_B(rdena_b),
 	.PUSH(push),
@@ -166,7 +191,7 @@ blkcpld_i (
 	.CLKIN(clkin),
 	.CMPCLKIN(cmpclkin),
 	.CMPFDBKIN(cmpfdbkin),
-	.RST(sync_rst),
+	.RST(resync),
 	.PUSH(push),
 	.LASTWORD(lastword),
 	.XLOAD(dataload),
@@ -189,7 +214,7 @@ blkmux
 blkmux_i (
 	.CLK25(clk25ns),
 	.CLK150(scam150ns),
-	.RST(sync_rst),
+	.RST(resync),
 	.START(push),
 	.OECRC(oecrcmux),
 	.DLOAD(dataload),

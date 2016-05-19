@@ -24,7 +24,7 @@ module readout #(
 	input C25,
 	input CLK,
 	input RST,
-	input GTRGEMPTY,
+	input L1AEMPTY,
 	input SCAFULL,
 	input DGSCAFULL,
 	input XLOAD,
@@ -152,7 +152,7 @@ assign last = plast & (tc_1 | (NODATA & read_1));
 assign ce1 = (STATE == 4'd1);
 assign done     = (tc | (BUSY & NODATA & !start & !l1pbn[0]) | (BUSY  & !read & !start & !l1pbn[0])) & ((upsie & (smp == 3'b100)) | (!upsie & (smp == 3'b000))) ;
 assign dup_done = (tc | (BUSY & NODATA & !start & !l1pbn[0]) | (BUSY  & !read & !start & !l1pbn[0])) & ((upsie & (smp == 3'b100)) | (!upsie & (smp == 3'b000))) ;
-assign doread  = !BUSY & !GTRGEMPTY & !done & !done_1 & !ldone & !DDONE;
+assign doread  = !BUSY & !L1AEMPTY & !done & !done_1 & !ldone & !DDONE;
 assign yce = doread & !yes;
 assign ceshift = !done_1 & (dlyhtc | !read | (NODATA & BUSY & !dup_done));
 assign ce_ss = ceshift | start;

@@ -27,7 +27,9 @@ module rdcntrl #(
 	input DISBL50,
 	input PBEND,
 	input TRGDONE,
-	input GTRG,
+	input L1A,
+	input L1A_MATCH,
+	input TRG_DCD,
 	input LCT_SRL1,
 	input DLSCAFULL,
 	input LCT_PH,
@@ -42,7 +44,7 @@ module rdcntrl #(
 	output PFIFO1,
 	output FULL,
 	output DGSCAFULL,
-	output reg NOGTRG,
+	output NOL1A_MATCH,
 	output TEMPTY,
 	output SCND_BLK,
 	output SCND_SHARED,
@@ -80,10 +82,10 @@ reg g1,g2,g3;
 wire pbend_1;
 wire state1;
 wire state3;
-reg  lnogtrg;
-reg  yesgtrg;
+reg  lnol1a_match;
+reg  yesl1a_match;
 wire f3_scnd_shared;
-reg  f3push;
+wire f3push;
 wire f3mt;
 reg  df3mt;
 wire l1mt;
@@ -98,28 +100,26 @@ wire dmyq4;
 wire dmyq5;
 wire dmyq6;
 
-always @*
-begin
-	if(MTCH_3BX==1) begin
-		lnogtrg = l2 | l3;
-		yesgtrg = f2 | f3;
-		f3push  = yesgtrg;
-		NOGTRG  = lnogtrg & !yesgtrg;
-	end
-	else begin
-		lnogtrg = l2 | l3 | l4;
-		yesgtrg = f2 | f3 | f4;
-		f3push  = g2 | g3;
-		NOGTRG  = (lnogtrg & !yesgtrg) | (yesgtrg & !f3push);
-	end
-end
-
 assign pbend_1 = (STATE == 4'd12);
 assign state1  = (STATE == 4'd1);
 assign state3  = (STATE == 4'd3);
-assign PFIFO1  = state3 & (yesgtrg | lnogtrg);
 assign f3_scnd_shared = f2 & f3;
+assign f3push = g2 | g3;
+assign PFIFO1  = state3 & (yesl1a_match | lnol1a_match);
+assign NOL1A_MATCH  = (lnol1a_match & !yesl1a_match) | (yesl1a_match & !f3push);
 assign TEMPTY = f3mt | df3mt;
+
+always @*
+begin
+	if(MTCH_3BX==1) begin
+		lnol1a_match = l2 | l3;
+		yesl1a_match = f2 | f3;
+	end
+	else begin
+		lnol1a_match = l2 | l3 | l4;
+		yesl1a_match = f2 | f3 | f4;
+	end
+end
 
 fifo3 #(.TMR(TMR))
 fifo3_i(
@@ -167,14 +167,16 @@ trigreg_i(
 	.CLK(CLK),
 	.RST(RST),
 	.LCT_SRL1(LCT_SRL1),
-	.GIN(GTRG),
+	.L1A(L1A),
+	.L1A_MATCH(L1A_MATCH),
+	.TRG_DCD(TRG_DCD),
 	.LAT_12_5US(LAT_12_5US),
 	.MTCH_3BX(MTCH_3BX),
 	.XL1DLYSET(XL1DLYSET),
 	.MATCHR(matchd),
 	.NO_MATCH(no_matchd),
 	.GMATCH(gmatch),
-	.MATCH(DAV),
+	.DAV(DAV),
 	.MISS_MATCH(MOVLP)
 );
 
@@ -276,10 +278,10 @@ always @(posedge CLK or posedge RST) begin
 			dl1a_pos <= l1a_pos;
 end
 
-cbnce #(.Width(6),.TMR(TMR)) l1a_counter_i (.CLK(CLK),.RST(RST),.CE(GTRG),.Q(l1an));
+cbnce #(.Width(6),.TMR(TMR)) l1a_counter_i (.CLK(CLK),.RST(RST),.CE(L1A),.Q(l1an));
 
 always @(posedge CLK) begin
-	if(GTRG)
+	if(L1A)
 		l1a_phase_1 <= ENBL50;
 end
 always @(posedge CLK) begin

@@ -24,14 +24,16 @@ module trigreg #(
 	input CLK,
 	input RST,
 	input LCT_SRL1,
-	input GIN,
+	input L1A,
+	input L1A_MATCH,
+	input TRG_DCD,
 	input LAT_12_5US,
 	input MTCH_3BX,
 	input [1:0] XL1DLYSET,
 	output reg MATCHR,
 	output reg NO_MATCH,
 	output reg GMATCH,
-	output reg MATCH, //DAV
+	output reg DAV,
 	output reg MISS_MATCH
 );
 
@@ -65,10 +67,11 @@ reg  pyes_p1;
 reg  pyes_p2;
 reg no_match_1;
 reg matchr_1;
-reg gin1;
-reg gin2;
-reg gin3;
-reg gin4;
+reg l1a1;
+reg l1m1;
+reg l1m2;
+reg l1m3;
+reg l1m4;
 wire overlap;
 wire medge;
 wire [1:0] qovr;
@@ -83,23 +86,23 @@ always @*
 begin
 	if(MTCH_3BX==1) begin
 		lct_window = llout_m1 | llout0 | llout_p1;
-		l1a_window = GIN | gin1 | gin2;
-		pno        = llout0 & !l1a_window;
-		pyes       = llout0 &  l1a_window;
+		l1a_window = L1A_MATCH | l1m1 | l1m2;
+		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout0 & !l1a_window;
+		pyes       = TRG_DCD ? l1m1           : llout0 &  l1a_window;
 		no_match_1 = pno_p2;
 		matchr_1   = pyes_p2;
 	end
 	else begin
 		lct_window = llout_m1 | llout0 | llout_p1 | llout_p2 | llout_p3;
-		l1a_window = GIN | gin1 | gin2 | gin3 | gin4;
-		pno        = llout_p2 & !l1a_window;
-		pyes       = llout_p2 &  l1a_window;
+		l1a_window = L1A_MATCH | l1m1 | l1m2 | l1m3 | l1m4;
+		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout_p2 & !l1a_window;
+		pyes       = TRG_DCD ? l1m1           : llout_p2 &  l1a_window;
 		no_match_1 = pno;
 		matchr_1   = pyes;
 	end
 end
 
-assign prematch      = lct_window & gin1;
+assign prematch      = TRG_DCD ? l1m1 : lct_window & l1m1;
 assign match_disable = overlap & !medge;
 assign pmatch        = prematch & !match_disable;
 assign pmiss         = prematch & match_disable;
@@ -108,10 +111,11 @@ assign overlap       = qovr[1];
 always @(posedge CLK or posedge RST) begin
 	if(RST)
 		begin
-			gin1     <= 1'b0;
-			gin2     <= 1'b0;
-			gin3     <= 1'b0;
-			gin4     <= 1'b0;
+			l1a1     <= 1'b0;
+			l1m1     <= 1'b0;
+			l1m2     <= 1'b0;
+			l1m3     <= 1'b0;
+			l1m4     <= 1'b0;
 			pno_p1   <= 1'b0;
 			pno_p2   <= 1'b0;
 			pyes_p1  <= 1'b0;
@@ -122,10 +126,11 @@ always @(posedge CLK or posedge RST) begin
 		end
 	else
 		begin
-			gin1     <= GIN;
-			gin2     <= gin1;
-			gin3     <= gin2;
-			gin4     <= gin3;
+			l1a1     <= L1A;
+			l1m1     <= L1A_MATCH;
+			l1m2     <= l1m1;
+			l1m3     <= l1m2;
+			l1m4     <= l1m3;
 			pno_p1   <= pno;
 			pno_p2   <= pno_p1;
 			pyes_p1  <= pyes;
@@ -180,7 +185,7 @@ end
 
 (* syn_useioff = "True" *)
 always @(posedge CLK) begin
-	MATCH      <= pmatch;
+	DAV      <= pmatch;
 	MISS_MATCH <= pmiss;
 end
 
