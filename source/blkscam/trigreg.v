@@ -150,8 +150,8 @@ end
 //srl_nx1 #(.Depth(16))  lct_delay_1i (.CLK(CLK),.CE(1'b1),.I(LIN),     .O(lct_srl1)); // Moved up to blkscam level
 srl_nx1 #(.Depth(16))  lct_delay_2i (.CLK(CLK),.CE(1'b1),.I(lct_fdc1),.O(lct_srl2));
 srl_nx1 #(.Depth(16))  lct_delay_3i (.CLK(CLK),.CE(1'b1),.I(lct_fdc2),.O(lct_srl3));
-srl_nx1 #(.Depth(64)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(lct_fdc3),.O(l1dly0a)); // use l1dly0a for  3.2us L1A latency
-srl_nx1 #(.Depth(368)) lct_delay_4i (.CLK(CLK),.CE(1'b1),.I(l1dly0a),.O(l1dly0b)); // use l1dly0b for 12.5us L1A latency
+srl_nx1 #(.Depth(64)) lct_delay_4ai (.CLK(CLK),.CE(1'b1),.I(lct_fdc3),.O(l1dly0a)); // use l1dly0a for  3.2us L1A latency
+srl_nx1 #(.Depth(368)) lct_delay_4bi (.CLK(CLK),.CE(1'b1),.I(l1dly0a),.O(l1dly0b)); // use l1dly0b for 12.5us L1A latency
 assign l1dly0 = LAT_12_5US ? l1dly0b : l1dly0a;
 srl_nx1 #(.Depth(16))  lct_delay_5i (.CLK(CLK),.CE(1'b1),.I(l1dly0),  .O(l1dly1));
 srl_nx1 #(.Depth(16))  lct_delay_6i (.CLK(CLK),.CE(1'b1),.I(l1dly1),  .O(l1dly2));

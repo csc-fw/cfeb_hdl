@@ -20,7 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module cfeb_hdl #(
-	parameter TMR = 1
+	parameter TMR = 1,
+	parameter SIM = 0
 )(
     input [2:0] ENC_TRG, //{GLOBAL_RST,L1A,LCT}
     input CMSCLK,
@@ -106,7 +107,7 @@ reg resync;
 
 
 initial begin
-	enc_bit = 3'b000;
+	enc_trg = 3'b000;
 end
 
 IBUFG CMSCLK_BUF(.O(clkin),.I(CMSCLK));
@@ -126,7 +127,7 @@ begin
 end
 
 (* syn_useioff = "True" *)
-always @(posedge CLK) begin
+always @(posedge clk25ns) begin
 	enc_trg <= ENC_TRG; // 3bits 
 end
 
@@ -235,18 +236,78 @@ blkmux_i (
 );
 
 
-BSCAN_VIRTEX BSCAN_VIRTEX_inst (
-	.DRCK1(drck1_i),     // Data register output for USER1 functions
-	.DRCK2(drck2_i),     // Data register output for USER2 functions
-	.RESET(jrst),     // Reset output from TAP controller
-	.SEL1(sel1),       // USER1 active output
-	.SEL2(sel2),       // USER2 active output
-	.SHIFT(shift),     // SHIFT output from TAP controller
-	.TDI(btdi),         // TDI output from TAP controller
-	.UPDATE(update),   // UPDATE output from TAP controller
-	.TDO1(tdo1),       // Data input for USER1 function
-	.TDO2(tdo2)        // Data input for USER2 function
-);
+
+generate
+if(SIM==1) 
+begin : jtag_sim
+	
+ /////////////////////////////////////////////////////////////////////////////
+ //                                                                         //
+ //  JTAG Access Ports for user function in the fabric (up to 4 interfaces) //
+ //  For simulation with ISE 14.7, assumes Virtex6 device                   //
+ /////////////////////////////////////////////////////////////////////////////
+ 
+ wire capture1, capture2;
+ wire jreset1,  jreset2;
+ wire runtest1, runtest2;
+ wire jshift1,  jshift2;
+ wire tck1,     tck2;
+ wire tdi1,     tdi2;
+ wire tms1,     tms2;
+ wire update1,  update2;
+ 
+ assign jrst   = jreset1 | jreset2;
+ assign shift  = jshift1 | jshift2;
+ assign btdi   = tdi1    | tdi2;
+ assign update = update1 | update2;
+ 
+   BSCAN_VIRTEX6 #(.DISABLE_JTAG("FALSE"),.JTAG_CHAIN(1))  // User 1 for instruction decodes
+   BSCAN_user1 (
+      .CAPTURE(capture1), // 1-bit output CAPTURE output from TAP controller
+      .DRCK(drck1_i),     // 1-bit output Data register output for USER functions
+      .RESET(jreset1),    // 1-bit output Reset output for TAP controller
+      .RUNTEST(runtest1), // 1-bit output State output asserted when TAP controller is in Run Test Idle state.
+      .SEL(sel1),         // 1-bit output USER active output
+      .SHIFT(jshift1),    // 1-bit output SHIFT output from TAP controller
+      .TCK(tck1),         // 1-bit output Scan Clock output. Fabric connection to TAP Clock pin.
+      .TDI(tdi1),         // 1-bit output TDI output from TAP controller
+      .TMS(tms1),         // 1-bit output Test Mode Select input. Fabric connection to TAP.
+      .UPDATE(update1),   // 1-bit output UPDATE output from TAP controller
+      .TDO(tdo1)          // 1-bit input Data input for USER function
+   );
+  
+   BSCAN_VIRTEX6 #(.DISABLE_JTAG("FALSE"),.JTAG_CHAIN(2))  // User 2 for data I/O
+   BSCAN_user2 (
+      .CAPTURE(capture2), // 1-bit output CAPTURE output from TAP controller
+      .DRCK(drck2_i),     // 1-bit output Data register output for USER functions
+      .RESET(jreset2),    // 1-bit output Reset output for TAP controller
+      .RUNTEST(runtest2), // 1-bit output State output asserted when TAP controller is in Run Test Idle state.
+      .SEL(sel2),         // 1-bit output USER active output
+      .SHIFT(jshift2),    // 1-bit output SHIFT output from TAP controller
+      .TCK(tck2),         // 1-bit output Scan Clock output. Fabric connection to TAP Clock pin.
+      .TDI(tdi2),         // 1-bit output TDI output from TAP controller
+      .TMS(tms2),         // 1-bit output Test Mode Select input. Fabric connection to TAP.
+      .UPDATE(update2),   // 1-bit output UPDATE output from TAP controller
+      .TDO(tdo2)          // 1-bit input Data input for USER function
+   );
+	
+end
+else
+begin : jtag_bscan
+	BSCAN_VIRTEX BSCAN_VIRTEX_inst (
+		.DRCK1(drck1_i),     // Data register output for USER1 functions
+		.DRCK2(drck2_i),     // Data register output for USER2 functions
+		.RESET(jrst),     // Reset output from TAP controller
+		.SEL1(sel1),       // USER1 active output
+		.SEL2(sel2),       // USER2 active output
+		.SHIFT(shift),     // SHIFT output from TAP controller
+		.TDI(btdi),         // TDI output from TAP controller
+		.UPDATE(update),   // UPDATE output from TAP controller
+		.TDO1(tdo1),       // Data input for USER1 function
+		.TDO2(tdo2)        // Data input for USER2 function
+	);
+end
+endgenerate
 
 BUFG jclk_buf1 (
 	.O(drck1),     // Clock buffer output

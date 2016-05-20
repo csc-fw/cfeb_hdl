@@ -66,7 +66,7 @@ wire xload;
 wire lastwordd;
 
 wire trgdone;
-wire nol1a;
+wire nol1a_match;
 wire fb_nodata;
 wire scnd_blk;
 wire scnd_shared;
@@ -151,7 +151,7 @@ scamcntrl_i (
 	.LCTDLY(lctdly),
 	.LOADPBLK(LOADPBLK),
 	.DONE(trgdone),
-	.NOL1A(nol1a),
+	.NOL1A_MATCH(nol1a_match),
 	.NODATA(nodata),
 	.FB_NODATA(fb_nodata),
 	.SCND_BLK(scnd_blk),
@@ -252,7 +252,7 @@ rdcntrl_i(
 	.PFIFO1(pfifo1),
 	.FULL(full3),
 	.DGSCAFULL(dgscafull),
-	.NOL1A(nol1a),
+	.NOL1A_MATCH(nol1a_match),
 	.TEMPTY(tempty),
 	.SCND_BLK(scnd_blk),
 	.SCND_SHARED(scnd_shared),

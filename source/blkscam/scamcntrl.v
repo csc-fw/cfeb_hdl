@@ -26,7 +26,7 @@ module scamcntrl #(
 	input LCTDLY,
 	input [3:0] LOADPBLK,
 	input DONE,
-	input NOL1A,
+	input NOL1A_MATCH,
 	input NODATA,
 	input FB_NODATA,
 	input SCND_BLK,
@@ -74,7 +74,7 @@ assign LCTYENA   = llct & (STATE == 4'd14);
 assign NOLCT     = !llct & !DSCAFULL & (STATE == 4'd14); 
 assign PREBLKEND = (STATE == 4'd13);
 assign SELA      = (STATE == 4'd5);
-assign SELB      = NOL1A & !DLSCAFULL & (STATE == 4'd3);
+assign SELB      = NOL1A_MATCH & !DLSCAFULL & (STATE == 4'd3);
 assign ENAREG    = (STATE == 4'd15);
 assign NBSEL     = (STATE == 4'd14);
 assign WRENA     = SELA | SELB | SELC | SELD | NOLCT;

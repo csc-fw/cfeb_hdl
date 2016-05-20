@@ -4,15 +4,15 @@
 // Company: 
 // Engineer:
 //
-// Create Date:   14:20:55 02/11/2015
-// Design Name:   cfeb_hdl_sim_top
-// Module Name:   C:/Users/bylsma/Projects/CFEB/Firmware/cfeb_hdl/source/cfeb_hdl_sim.v
+// Create Date:   12:41:09 05/20/2016
+// Design Name:   cfeb_hdl
+// Module Name:   C:/Users/bylsma/Projects/CFEB/Firmware/ISE_14.7/cfeb_hdl/cfeb_hdl_sim_tf.v
 // Project Name:  cfeb_hdl
 // Target Device:  
 // Tool versions:  
 // Description: 
 //
-// Verilog Test Fixture created by ISE for module: cfeb_hdl_sim_top
+// Verilog Test Fixture created by ISE for module: cfeb_hdl
 //
 // Dependencies:
 // 
@@ -22,17 +22,12 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module cfeb_hdl_sim;
+module cfeb_hdl_sim_tf;
 
 	// Inputs
-	reg TDI;
-	reg TMS;
-	reg TCK;
-	reg LCT;
-	reg GTRG;
+	reg [2:0] ENC_TRG;
 	reg CMSCLK;
 	reg CMPCLK;
-	reg GLOBAL_RST;
 	reg [12:0] ADC1B;
 	reg [12:0] ADC2B;
 	reg [12:0] ADC3B;
@@ -43,7 +38,6 @@ module cfeb_hdl_sim;
 	wire CMPFDBK;
 
 	// Outputs
-	wire TDO;
 	wire RDENA_B;
 	wire MOVLAP;
 	wire DATAAVAIL;
@@ -71,17 +65,13 @@ module cfeb_hdl_sim;
 	wire DMYSHIFT;
 
 	// Instantiate the Unit Under Test (UUT)
-	cfeb_hdl_sim_top #(
-		.TMR(1'b0)
+	cfeb_hdl #(
+		.TMR(0),
+		.SIM(1)
 	) uut (
-		.TDI(TDI), 
-		.TMS(TMS), 
-		.TCK(TCK), 
-		.LCT(LCT), 
-		.GTRG(GTRG), 
+		.ENC_TRG(ENC_TRG), 
 		.CMSCLK(CMSCLK), 
 		.CMPCLK(CMPCLK), 
-		.GLOBAL_RST(GLOBAL_RST), 
 		.ADC1B(ADC1B), 
 		.ADC2B(ADC2B), 
 		.ADC3B(ADC3B), 
@@ -91,7 +81,6 @@ module cfeb_hdl_sim;
 		.AMPOUT(AMPOUT), 
 		.CMPFDBK(CMPFDBK), 
 		.DMYSHIFT(DMYSHIFT), 
-		.TDO(TDO), 
 		.RDENA_B(RDENA_B), 
 		.MOVLAP(MOVLAP), 
 		.DATAAVAIL(DATAAVAIL), 
@@ -116,21 +105,30 @@ module cfeb_hdl_sim;
 		.LEDS(LEDS)
 	);
 
-	
-   parameter PERIOD = 24;
+   parameter PERIOD = 24;  // CMS clock period (40MHz)
 	parameter JPERIOD = 100;
-	parameter ir_width = 5;
+	parameter ir_width = 10;
 	parameter max_width = 300;
-
-   reg [47:0] bky1sh,bky2sh,bky3sh,bky4sh,bky5sh,bky6sh;
-
-   integer i;
+	
+//JTAG
+	reg TMS,TDI,TCK;
 	reg [7:0] jrst;
 	reg [3:0] sir_hdr;
 	reg [3:0] sdr_hdr;
 	reg [2:0] trl;
 	reg [ir_width-1:0] usr1;
 	reg [ir_width-1:0] usr2;
+
+//Trigger
+	reg resync;
+	reg l1a;
+	reg l1a_match;
+	reg lct;
+	reg encode;
+	
+   reg [47:0] bky1sh,bky2sh,bky3sh,bky4sh,bky5sh,bky6sh;
+
+   integer i;
 	reg [7:0] ch;
 
 	assign CMPFDBK = CMPMUX;
@@ -153,12 +151,21 @@ module cfeb_hdl_sim;
 
 	initial begin
 		// Initialize Inputs
-		TDI = 0;
-		TMS = 0;
-		TCK = 0;
-		LCT = 0;
-		GTRG = 0;
-		GLOBAL_RST = 1;
+		resync    = 0;
+		l1a       = 0;
+		l1a_match = 0;
+		lct       = 0;
+		encode    = 0;
+
+		TMS = 1'b1;
+		TDI = 1'b0;
+		TCK = 1'b0;
+      jrst = 8'b00111111;
+      sir_hdr = 4'b0011;
+      sdr_hdr = 4'b0010;
+		trl = 3'b001;
+		usr1 = 10'h3c2; // usr1 instruction
+		usr2 = 10'h3c3; // usr2 instruction
 		
 		bky1sh = 0;
 		bky2sh = 0;
@@ -167,39 +174,36 @@ module cfeb_hdl_sim;
 		bky5sh = 0;
 		bky6sh = 0;
 
-      jrst = 8'b00111111;
-      sir_hdr = 4'b0011;
-      sdr_hdr = 4'b0010;
-		trl = 3'b001;
-		usr1 = 5'd2; // usr1 instruction
-		usr2 = 5'd3; // usr2 instruction
 		ch = 0;
 
 		// Wait 100 ns for global reset to finish
 		#100;
 		#(25*PERIOD);
-		GLOBAL_RST = 0;
+		resync = 0;
 		#(50*PERIOD);
-		GLOBAL_RST = 1;
+		resync = 1;
 		#(20*PERIOD);
-		GLOBAL_RST = 0;
+		resync = 0;
 		#(50*PERIOD);
+		encode = 0;
 
 		// Add stimulus here
-// Function  Description
-// ---------------------------------------
-//   0     | No Op 
-//   1     | SCAM Reset (not needed in DCFEB)
-//   2     | DCFEB status reg shift only
-//   3     | DCFEB status reg capture and shift
-//   4     | Program Comparator DAC
-//   5     | Set Extra L1a Delay
-//   6     | 
-//   7     | Set F5, F8, and F9 in one serial loop (daisy chained)
-//   8     | Set Pre Block End (not needed in DCFEB)
-//   9     | Set Comparator Mode and Timing bits
-//  10     | Set Buckeye Mask for shifting (default 6'b111111)
-//  11     | Shift data to/from Buckeye chips
+// JTAG Instruction Decode
+//--------------------------------
+// OpCode | Function
+//--------------------------------
+//    0   | NoOp
+//    1   | SCAM Reset
+//    2   | Check CFEB status, Shift only
+//    3   | Check CFEB status, Capture and shift
+//    4   | Program Comparator DAC
+//    5   | Load extra L1A delay
+//    6   | Load cfeb_config register with TRG_DCD,MTCH_3BX,LAT_12_5US
+//    7   | Load f5, f8, and f9
+//    8   | Load PRE_BLOCK_END
+//    9   | Load Comparator MODE and TIME
+//   10   | Buckeye mask, default 111111
+//   11   | Buckeye shift in/shift out
 
 		JTAG_reset;
 		
@@ -217,85 +221,92 @@ module cfeb_hdl_sim;
 		
 		#(4*PERIOD);
 		
-//      LCT = 1;
+		Set_Func(8'h06);           // CFEB Config end
+		Set_User(usr2);            // User 2 for User Reg access
+		Shift_Data(4,4'b0000);       // preblock data
+		
+		#(4*PERIOD);
+		
+//      lct = 1;
 //		#(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //		#(500*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //		#(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //		#(50*PERIOD);
 		#(3*PERIOD);
-      LCT = 1;
+      lct = 1;
       #(1*PERIOD);
-      LCT = 0;
+      lct = 0;
       #(499*PERIOD);
-      GTRG = 1;
+      l1a = 1;
       #(1*PERIOD);
-      GTRG = 0;
+      l1a = 0;
       #(236*PERIOD);
-//      LCT = 1;
+		
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //      #(416*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //      #(82*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //      #(385*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //      #(30*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //      #(468*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //      #(155*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //		
 //      #(9*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //		
 //      #(114*PERIOD);
 //      #(1*PERIOD);
 //      #(61*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //		
 //      #(312*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //      #(9*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //		
 //      #(6*PERIOD);
-//      LCT = 1;
+//      lct = 1;
 //      #(1*PERIOD);
-//      LCT = 0;
+//      lct = 0;
 //      #(169*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
+//      l1a = 0;
 //      #(329*PERIOD);
-//      GTRG = 1;
+//      l1a = 1;
 //      #(1*PERIOD);
-//      GTRG = 0;
-		
+//      l1a = 0;
+
 
 	end
 	
@@ -319,6 +330,25 @@ module cfeb_hdl_sim;
 	always @(posedge AMPCLK[6])	   bky6sh <= {AMPIN[6],bky6sh[47:1]};
 		
    assign AMPOUT = {bky6sh[0],bky5sh[0],bky4sh[0],bky3sh[0],bky2sh[0],bky1sh[0]};
+
+	always @* begin
+		if(encode)
+			casex({resync,l1a_match,l1a,lct})
+				4'b0000 : ENC_TRG = 3'd0; 
+				4'b0001 : ENC_TRG = 3'd1; 
+				4'b0011 : ENC_TRG = 3'd2; 
+				4'b0111 : ENC_TRG = 3'd3; 
+				4'b0010 : ENC_TRG = 3'd4; 
+				4'b0110 : ENC_TRG = 3'd5; 
+				4'b1xxx : ENC_TRG = 3'd7; 
+				default : ENC_TRG = 3'd0;
+			endcase
+		else	begin
+			ENC_TRG[0] = lct;
+			ENC_TRG[1] = l1a;
+			ENC_TRG[2] = resync;
+		end
+	end
 	
 	
 task JTAG_reset;
@@ -407,5 +437,6 @@ begin
 		end
 end
 endtask
-      
+            
 endmodule
+
