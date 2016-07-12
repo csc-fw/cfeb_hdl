@@ -52,7 +52,7 @@ module jtag #(
 	input DRCK1,
 	input DRCK2,
 	input [6:1] AMPOUT,
-	input [15:0] CSTATUS,
+	input [23:0] CSTATUS,
 	output TDO1,
 	output TDO2,
 	output DACCLK,
@@ -70,7 +70,7 @@ module jtag #(
 	output [6:1] AMPCLK
 );
 
-wire [31:16] jstatus;
+wire [39:24] jstatus;
 reg [15:0] f;
 reg [7:0] dcmd;
 wire lxdlyout;
@@ -223,7 +223,7 @@ assign DACCLK    = cdac_ena & DRCK2;
 //
 // Status capture and shift
 //
-   user_cap_reg #(.width(32))
+   user_cap_reg #(.width(40))
    status1(
       .DRCK(DRCK2),        // Data Reg Clock
       .FSH(f[2]),         // Shift Function
