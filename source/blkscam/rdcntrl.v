@@ -100,6 +100,32 @@ wire dmyq4;
 wire dmyq5;
 wire dmyq6;
 
+initial
+begin
+	dl1a_pos = 0;
+	l1a_pos_sr = 0;
+	gmatchr = 0;
+	dgmatchr = 0;
+	matchr = 0;
+	l1 = 0;
+	l2 = 0;
+	l3 = 0;
+	l4 = 0;
+	f1 = 0;
+	f2 = 0;
+	f3 = 0;
+	f4 = 0;
+	g1 = 0;
+	g2 = 0;
+	g3 = 0;
+	lnol1a_match = 0;
+	yesl1a_match = 0;
+	df3mt = 0;
+	dl1an = 0;
+	l1a_phase_1 = 0;
+	l1a_phase = 0;
+end
+
 assign pbend_1 = (STATE == 4'd12);
 assign state1  = (STATE == 4'd1);
 assign state3  = (STATE == 4'd3);
@@ -166,8 +192,8 @@ trigreg #(
 trigreg_i(
 	.CLK(CLK),
 	.RST(RST),
-	.LCT_SRL1(LCT_SRL1),
 	.L1A(L1A),
+	.LCT_SRL1(LCT_SRL1),
 	.L1A_MATCH(L1A_MATCH),
 	.TRG_DCD(TRG_DCD),
 	.LAT_12_5US(LAT_12_5US),
@@ -234,7 +260,7 @@ always @(posedge CLK or posedge RST) begin
 		begin
 			l1 <= no_match_1 | (l1 & !PBEND);
 			f1 <= matchr_1   | (f1 & !PBEND);
-			g1 <= gmatchr_1  | (11 & !pbend_1);
+			g1 <= gmatchr_1  | (g1 & !pbend_1);
 			if(PBEND)
 				begin
 					l2 <= l1;

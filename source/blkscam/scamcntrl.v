@@ -55,6 +55,14 @@ reg lct_scnd;
 reg lct_thrd;
 reg llct;
 
+initial
+begin
+	lct_frst = 0;
+	lct_scnd = 0;
+	lct_thrd = 0;
+	llct = 0;
+end
+
 always @*
 begin
 	if(MTCH_3BX==1) begin

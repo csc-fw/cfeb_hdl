@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module nbadr #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter SIM = 0
 )(
 	input CLK,
 	input RST,
@@ -54,10 +55,18 @@ wire [2:0] gcnt_out;
 reg  [2:0] gwout;
 wire [15:0] bmem;
 
+initial
+begin
+	DSCAFULL = 0;
+	W = 0;
+	sel = 0;
+	gwout = 0;
+end
+
 assign WADR[2:0] = gwout;
 assign cerst = RST | ENAREG;
-//assign LEDS = {!(RST | VSCAFULL),~WADR};
-assign LEDS = bmem[7:0];
+assign LEDS = {!(RST | VSCAFULL),~WADR};
+//assign LEDS = bmem[7:0];
 
 
 (* syn_useioff = "True" *)
@@ -301,7 +310,7 @@ begin : nbadr_TMR
 
 	vote #(.Width(3)) vote_wcap_gcnt (.A(gcnt_a),.B(gcnt_b),.C(gcnt_c),.V(gcnt_out));
 
-	nbaselvs #(.TMR(1))
+	nbaselvs #(.TMR(1),.SIM(SIM))
 	next_block_mem_a(
 		.CLK(CLK),
 		.RST(RST),
@@ -316,7 +325,7 @@ begin : nbadr_TMR
 		.SCAFULL(scafull[0])
 	);
 
-	nbaselvs #(.TMR(1))
+	nbaselvs #(.TMR(1),.SIM(SIM))
 	next_block_mem_b(
 		.CLK(CLK),
 		.RST(RST),
@@ -331,7 +340,7 @@ begin : nbadr_TMR
 		.SCAFULL(scafull[1])
 	);
 
-	nbaselvs #(.TMR(1))
+	nbaselvs #(.TMR(1),.SIM(SIM))
 	next_block_mem_c(
 		.CLK(CLK),
 		.RST(RST),
@@ -407,9 +416,9 @@ begin : nbadr_noTMR
 	begin
 		if(RST)
 			begin
-				doo  <= 4'h0;
-				ddo  <= 4'h0;
-				dddo <= 4'h0;
+				doo  <= 4'h3;
+				ddo  <= 4'h1;
+				dddo <= 4'h0; // must be zero during reset
 			end
 		else
 			if(ENAREG)
@@ -448,7 +457,7 @@ begin : nbadr_noTMR
 
 	assign gcnt_out = gcnt;
 
-	nbaselvs #(.TMR(0))
+	nbaselvs #(.TMR(0),.SIM(SIM))
 	next_block_mem(
 		.CLK(CLK),
 		.RST(RST),

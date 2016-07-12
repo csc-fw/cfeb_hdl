@@ -70,12 +70,22 @@ wire dllrst;
 (* MAXDELAY = "1ns" *) wire scawe;
 
 initial begin
-	rst_1     =0;
-	sync_rst2 =0;
-	sync_rst3 =0;
-	pre50     =0;
-	rstclk    =0;
-	lrst      =0;
+	EN50      = 0;
+	DIS50     = 0;
+	LPUSH_B   = 1'b1;
+	END       = 0;
+	ADCCLK    = 0;
+	lrst      = 0;
+	lw        = 0;
+	pre50     = 0;
+	sync_rst2 = 0;
+	sync_rst3 = 0;
+	rstclk    = 0;
+	rst_1     = 0;
+	load      = 0;
+	dlyload   = 0;
+	dl_en50   = 0;
+	pre150clk = 0;
 end
 
 assign dllrst = 0;
@@ -325,9 +335,13 @@ begin : cpld_TMR
 				lw <= !lw;
 	end
 
-	(* syn_preserve = "True" *) srl_nx1 #(.Depth(5))	srl_lwa (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwa));
-	(* syn_preserve = "True" *) srl_nx1 #(.Depth(5))	srl_lwb (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwb));
-	(* syn_preserve = "True" *) srl_nx1 #(.Depth(5))	srl_lwc (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwc));
+	(* syn_preserve = "True" *) SRL16 #(.INIT(16'h0000)) srl_lwa (.Q(lwa),.A0(1'b0),.A1(1'b0),.A2(1'b1),.A3(1'b0),.CLK(CLK),.D(lw));
+	(* syn_preserve = "True" *) SRL16 #(.INIT(16'h0000)) srl_lwb (.Q(lwb),.A0(1'b0),.A1(1'b0),.A2(1'b1),.A3(1'b0),.CLK(CLK),.D(lw));
+	(* syn_preserve = "True" *) SRL16 #(.INIT(16'h0000)) srl_lwc (.Q(lwc),.A0(1'b0),.A1(1'b0),.A2(1'b1),.A3(1'b0),.CLK(CLK),.D(lw));
+
+//	(* syn_preserve = "True" *) 	srl_nx1 #(.Depth(5))	srl_lwa (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwa));
+//	(* syn_preserve = "True" *) 	srl_nx1 #(.Depth(5))	srl_lwb (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwb));
+//	(* syn_preserve = "True" *) 	srl_nx1 #(.Depth(5))	srl_lwc (.CLK(CLK),.CE(1'b1),.I(lw),.O(lwc));
 
 	vote #(.Width(1)) vote_lw (.A(lwa), .B(lwb), .C(lwc), .V(vt_lw));
 
@@ -474,7 +488,7 @@ begin : cpld_noTMR
 	//////////// end section ////////////
 
 	//
-	// generate and TMR the ADCCLK
+	// generate the ADCCLK
 	//
 
 	reg  c_1;

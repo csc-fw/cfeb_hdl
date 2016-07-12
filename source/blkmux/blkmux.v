@@ -73,7 +73,36 @@ reg clr_clr;
 reg clr_crc;
 
 initial begin
+	OVERLAP = 0;
+	OUT = 0;
 	oecrc_b = 1'b1;
+	crc = 0;
+	oen_b = 1'b1;
+	datamx = 0;
+	adc1b = 0;
+	adc2b = 0;
+	adc3b = 0;
+	adc4b = 0;
+	adc5b = 0;
+	adc6b = 0;
+	datax = 0;
+	oecheck_b = 1'b1;
+	oecheck_1 = 0;
+	ovrlp = 0;
+	ovrlp_1 = 0;
+	oecrc_1 = 0;
+	oecrc_b = 1'b1;
+	oecrc_b_1 = 1'b1;
+	oecrcout_b = 1'b1;
+	oecnt1_b = 1'b1;
+	oecnt3_b = 1'b1;
+	oecrcrev_b = 1'b1;
+	oec = 0;
+	oecrc5 = 0;
+	st_crc = 0;
+	start_1 = 0;
+	clr_clr = 0;
+	clr_crc = 0;
 end
 
 assign selhb    = |STATUS[14:12];

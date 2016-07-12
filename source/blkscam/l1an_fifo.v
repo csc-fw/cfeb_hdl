@@ -44,6 +44,13 @@ wire [31:0] datal1an;
 wire [15:0] doa_dmy1;
 wire [15:0] doa_dmy2;
 
+initial
+begin
+	EMPTY = 0;
+	FULL = 0;
+	last = 0;
+end
+
 assign ce_wr = PUSH & !FULL;
 assign ce_rd = POP  & !EMPTY;
 assign datal1a = {11'h000,L1A_PHASE,DL1AN,L1A_PHASE,DL1AN,L1A_PHASE,DL1AN};

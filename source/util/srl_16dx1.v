@@ -26,9 +26,14 @@ module srl_16dx1(
 	output O,
 	output Q15
 );
-
+	
 (* syn_srlstyle = "select_srl" *)
    reg [15:0] sr;
+
+initial
+begin
+	sr = 0;
+end
 
    always @(posedge CLK)
       if (CE)begin

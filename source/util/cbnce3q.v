@@ -41,6 +41,13 @@ begin : cbnce_tmr
 
 	(* syn_keep = "true" *) wire [Width-1:0] voted_cnt_1;
 
+	initial
+	begin
+		cnt_1 = 0;
+		cnt_2 = 0;
+		cnt_3 = 0;
+	end
+
 	  vote #(.Width(Width)) vote_cnt_1 (.A(cnt_1), .B(cnt_2), .C(cnt_3), .V(voted_cnt_1));
 
 	assign Q1  =  cnt_1;
@@ -70,6 +77,11 @@ else
 begin : cbnce_notmr
 
 	reg [Width-1:0] cnt;
+
+	initial
+	begin
+		cnt = 0;
+	end
 
 	assign Q1  =  cnt;
 	assign Q2  =  cnt;

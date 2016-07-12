@@ -132,8 +132,58 @@ wire lepush;
 
 
 initial begin
+	OVLPINT = 0;
+	NODATA = 0;
+	FB_NODATA = 0;
+	DDONE = 0;
+	BUSY = 0;
+	DIGIDONE = 0;
+	ERRLOAD = 0;
+	XCHECK = 0;
+	NDENA = 0;
 	D13OUT = 0;
 	D14OUT = 0;
+	L1P = 0;
+	L1ANOUT = 0;
+	FB_ADR = 0;
+	RSTA = 0;
+	rdena = 0;
+	tc_1 = 0;
+	dlyhtc = 0;
+	plast = 0;
+	ldone = 0;
+	ce5 = 0;
+	done_1 = 0;
+	yes = 0;
+	pstart = 0;
+	start = 0;
+	busy_1 = 0;
+	lct_phase_bit = 0;
+	scnd_blk_1 = 0;
+	scnd_shared_1 = 0;
+	l1m = 0;
+	l1pbn = 0;
+	l1pcnt = 0;
+	ndload = 0;
+	psh_1 = 0;
+	psh = 0;
+	pshm1 = 0;
+	pshm2 = 0;
+	pshm3 = 0;
+	last_1 = 0;
+	last_2 = 0;
+	last_3 = 0;
+	read_1 = 0;
+	read_2 = 0;
+	read_3 = 0;
+	bsrd_1 = 0;
+	ndbsrd_1 = 0;
+	ndbsrd_2 = 0;
+	ndbsrd_3 = 0;
+	sce = 0;
+	sce_1 = 0;
+	l1preg = 0;
+	scablock = 0;
 end
 
 assign clr_gc     = RST | RDENA_B;

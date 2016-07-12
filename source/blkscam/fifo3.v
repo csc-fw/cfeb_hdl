@@ -52,6 +52,13 @@ wire [7:0] ra;
 reg last;
 wire [15:0] datain;
 
+initial
+begin
+	EMPTY = 0;
+	FULL = 0;
+	last = 0;
+end
+
 assign ce_wr = CEW & PUSH & !FULL;
 assign ce_rd = CER & POP  & !EMPTY;
 assign datain = {BLKIN,L1PIN,DLSCAFULL,SCND_SH_IN,SCND_BLK_IN,LCT_PH_IN};

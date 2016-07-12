@@ -77,9 +77,34 @@ wire medge;
 wire [1:0] qovr;
 
 initial begin
+	MATCHR = 0;
+	NO_MATCH = 0;
+	GMATCH = 0;
+	DAV = 0;
+	MISS_MATCH = 0;
 	lct_fdc1 = 0;
 	lct_fdc2 = 0;
 	lct_fdc3 = 0;
+	llout_m1 = 0;
+	llout0 = 0;
+	llout_p1 = 0;
+	llout_p2 = 0;
+	llout_p3 = 0;
+	lct_window = 0;
+	l1a_window = 0;
+	pno = 0;
+	pno_p1 = 0;
+	pno_p2 = 0;
+	pyes = 0;
+	pyes_p1 = 0;
+	pyes_p2 = 0;
+	no_match_1 = 0;
+	matchr_1 = 0;
+	l1a1 = 0;
+	l1m1 = 0;
+	l1m2 = 0;
+	l1m3 = 0;
+	l1m4 = 0;
 end
 
 always @*

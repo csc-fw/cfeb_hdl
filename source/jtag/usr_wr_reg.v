@@ -48,7 +48,7 @@ module user_wr_reg #(
   wire sel_update;
   reg dly_update;
   
-  initial d = 0;
+  initial d = def_value;
   
   assign TDO     = FSEL & d[0];
   assign DSY_OUT = DSY_CHAIN & d[0];
@@ -78,9 +78,16 @@ begin : usr_wr_reg_TMR
   
   (* syn_keep = "true" *) wire [width-1:0] voted_par_out_1;
   
+initial
+begin
+	par_out_1 = def_value;
+	par_out_2 = def_value;
+	par_out_3 = def_value;
+end
+
   vote #(.Width(width)) vote_parout_1 (.A(par_out_1), .B(par_out_2), .C(par_out_3), .V(voted_par_out_1));
   
-  always @(posedge DRCK or posedge RST) begin  // Parallel output register
+  always @(posedge CLK25 or posedge RST) begin  // Parallel output register
     if(RST) begin
 	   par_out_1 <= def_value;
 	   par_out_2 <= def_value;
@@ -104,6 +111,8 @@ end
 else 
 begin : usr_wr_reg_notmr
   reg [width-1:0] par_out;
+
+initial par_out = def_value;
   
   always @(posedge CLK25 or posedge RST) begin  // Parallel output register
     if(RST)

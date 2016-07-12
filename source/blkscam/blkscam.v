@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module blkscam #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter SIM = 0
 )(
 	input CLK,
 	input CLK150NS,
@@ -64,6 +65,7 @@ wire full3;
 wire full1;
 wire xload;
 wire lastwordd;
+
 
 wire trgdone;
 wire nol1a_match;
@@ -110,6 +112,11 @@ wire [7:0] l1p;
 wire [7:0] l1pout;
 wire [5:0] l1anum;
 wire [8:1] monitor;
+
+initial
+begin
+	rst = 0;
+end
 
 assign STATUS = {busy,nodata,PUSH,pfifo1,tempty,empty_b,full3,full1,nl1ablk[5:0],nlct[5:0],nfree_blks};
 assign xload = full1 | full3;
@@ -174,7 +181,8 @@ scamcntrl_i (
 );
 
 nbadr #(
-	.TMR(TMR)
+	.TMR(TMR),
+	.SIM(SIM)
 )
 nbadr_i(
 	.CLK(CLK),

@@ -22,7 +22,7 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module cfeb_hdl_sim_tf;
+module cfeb_hdl_sim_tf_tmr;
 
 	// Inputs
 	reg [2:0] ENC_TRG;
@@ -66,7 +66,7 @@ module cfeb_hdl_sim_tf;
 
 	// Instantiate the Unit Under Test (UUT)
 	cfeb_hdl #(
-		.TMR(0),
+		.TMR(1),
 		.SIM(1)
 	) uut (
 		.ENC_TRG(ENC_TRG), 
@@ -191,8 +191,8 @@ module cfeb_hdl_sim_tf;
 		#(50*PERIOD);
 
 		encode    = 1;
-		bx3       = 1;
-		lat125    = 1;
+		bx3       = 0;
+		lat125    = 0;
 
 		// Add stimulus here
 // JTAG Instruction Decode
@@ -246,8 +246,8 @@ module cfeb_hdl_sim_tf;
       lct = 1;
       #(1*PERIOD);
       lct = 0;
-      #(499*PERIOD); // for 12.5us latency
-//      #(132*PERIOD); // for 3.2us latency
+//      #(499*PERIOD); // for 12.5us latency
+      #(132*PERIOD); // for 3.2us latency
       l1a = 1;
 		l1a_match = 1;
       #(1*PERIOD);

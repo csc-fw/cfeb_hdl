@@ -55,6 +55,16 @@ wire phlct;
 wire lctphdly;
 reg  lct_phase_in;
 
+initial
+begin
+	FULL = 0;
+	empty = 0;
+	last = 0;
+	lclkstat = 0;
+	lclkstat_1 = 0;
+	lct_phase_in = 0;
+end
+
 assign wa[8] = 1'b0;
 assign ra[8] = 1'b0;
 assign ce_wr = PUSH & !FULL;

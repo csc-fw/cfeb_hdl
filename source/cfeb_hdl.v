@@ -85,6 +85,8 @@ wire [1:0] xl1dlyset;
 wire [1:0] jcmode;
 wire [2:0] jctime;
 
+wire drck1_i;
+wire drck2_i;
 wire drck1;
 wire drck2;
 wire jrst;
@@ -107,7 +109,7 @@ reg resync;
 
 
 initial begin
-	enc_trg = 3'b000;
+	enc_trg = 3'b100;
 end
 
 IBUFG CMSCLK_BUF(.O(clkin),.I(CMSCLK));
@@ -119,6 +121,17 @@ IBUFG CMPFDBK_BUF(.O(cmpfdbkin),.I(CMPFDBK));
 OBUF CMPMUX_BUF(.O(CMPMUX),.I(cmpmuxout));
 
 OBUF CMPRST_BUF(.O(CMPRST),.I(resync));
+
+genvar I;
+
+generate
+	for (I=0;I<2;I=I+1) begin : cmode_buf
+		OBUF CMPCMODE_BUF(.O(CMODE[I]),.I(jcmode[I]));
+	end
+	for (I=0;I<3;I=I+1) begin : ctime_buf
+		OBUF CMPCTIME_BUF(.O(CTIME[I]),.I(jctime[I]));
+	end
+endgenerate
 
 (* syn_useioff = "True" *)
 always @(negedge clk25ns)  // on falling edge
@@ -151,8 +164,22 @@ always @* begin
 	end
 end
 
+//assign CHADR = 0;
+//assign RADR = 0;
+//assign WADR = 0;
+//assign lEDS = 0;
+
+//assign LPUSH_B = 0;
+//assign ENDWORD = 0;
+//assign SCAWRITE = 0;
+//assign ADC150NS = 0;
+
+//assign OVERLAP = 0;
+//assign OUT = 0;
+
 blkscam  #(
-	.TMR(TMR)
+	.TMR(TMR),
+	.SIM(SIM)
 )
 blkscam_i (
 	.CLK(clk25ns),
@@ -234,7 +261,6 @@ blkmux_i (
 	.OVERLAP(OVERLAP),
 	.OUT(OUT)
 );
-
 
 
 generate
@@ -333,7 +359,7 @@ jtag_i (
 	.DRCK1(drck1),
 	.DRCK2(drck2),
 	.AMPOUT(AMPOUT),
-	.CSTATUS(status[15:0]),
+	.CSTATUS(status),
 	.TDO1(tdo1),
 	.TDO2(tdo2),
 	.DACCLK(DACCLK),

@@ -90,7 +90,12 @@ wire dshift;
 reg dly_update;
 wire [6:1] bky_mask;
 
-initial dcmd = 0;
+initial
+begin
+	f = 0;
+	dcmd = 0;
+	dly_update = 0;
+end
 
 assign TDO2 = tdof232 | tdof62 | tdof82 | tdof92 | tdofa2 | tdofb2 | tdof52;
 assign jstatus = {2'b10,TRG_DCD,MTCH_3BX,LAT_12_5US,XL1DLYSET,LOADPBLK,CTIME,CMODE};

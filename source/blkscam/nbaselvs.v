@@ -19,7 +19,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module nbaselvs #(
-	parameter TMR = 0
+	parameter TMR = 0,
+	parameter SIM = 0
 )(
     input CLK,
     input RST,
@@ -59,6 +60,18 @@ reg dly_scafull;
 wire bf_ce;
 wire ena_bf_ce;
 wire dis_bf_ce;
+
+initial
+begin
+	NADR = 0;
+	SCAFULL = 0;
+	sf_clr = 0;
+	lrst = 0;
+	dly_data = 0;
+	dly_wrena = 0;
+	dly_sela = 0;
+	dly_scafull = 0;
+end
 
 assign hp   = |out[3:0];                              // High priority group
 assign mpap = |out[6:4]; 
@@ -145,6 +158,10 @@ nbd_ram (.DPO(out[13]),.SPO(dmy[13]),.A0(wradr[0]),.A1(wradr[1]),.A2(wradr[2]),.
 RAM16X1D #(.INIT(16'h55FF))
 nbe_ram (.DPO(out[14]),.SPO(dmy[14]),.A0(wradr[0]),.A1(wradr[1]),.A2(wradr[2]),.A3(wradr[3]),.D(data),.DPRA0(~RDADR[0]),.DPRA1(~RDADR[1]),.DPRA2(~RDADR[2]),.DPRA3(~RDADR[3]),.WCLK(CLK),.WE(ena));
 
+generate
+if(SIM==1) 
+begin : nbadr_SIM
+
 RAM16X1D #(.INIT(16'h55FF))
 bm0_ram (.DPO(BMEM[ 0]),.SPO(dmmy[ 0]),.A0(wradr[0]),.A1(wradr[1]),.A2(wradr[2]),.A3(wradr[3]),.D(data),.DPRA0(1'b0),.DPRA1(1'b0),.DPRA2(1'b0),.DPRA3(1'b0),.WCLK(CLK),.WE(ena));
 RAM16X1D #(.INIT(16'h55FF))
@@ -177,5 +194,12 @@ RAM16X1D #(.INIT(16'h55FF))
 bme_ram (.DPO(BMEM[14]),.SPO(dmmy[14]),.A0(wradr[0]),.A1(wradr[1]),.A2(wradr[2]),.A3(wradr[3]),.D(data),.DPRA0(1'b0),.DPRA1(1'b1),.DPRA2(1'b1),.DPRA3(1'b1),.WCLK(CLK),.WE(ena));
 RAM16X1D #(.INIT(16'h55FF))
 bmf_ram (.DPO(BMEM[15]),.SPO(dmmy[15]),.A0(wradr[0]),.A1(wradr[1]),.A2(wradr[2]),.A3(wradr[3]),.D(data),.DPRA0(1'b1),.DPRA1(1'b1),.DPRA2(1'b1),.DPRA3(1'b1),.WCLK(CLK),.WE(ena));
+
+end
+else
+begin : nbadr_noSIM
+assign BMEM = 16'h0000;
+end
+endgenerate
 
 endmodule
