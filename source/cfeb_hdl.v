@@ -79,6 +79,7 @@ wire [15:0] data;
 wire [23:0] status;
 wire [5:0] l1anout;
 wire [6:1] adcen_b;
+wire [7:0] blkscam_leds;
 
 wire [3:0] loadpblk;
 wire [1:0] xl1dlyset;
@@ -132,6 +133,9 @@ generate
 		OBUF CMPCTIME_BUF(.O(CTIME[I]),.I(jctime[I]));
 	end
 endgenerate
+
+assign LEDS = blkscam_leds;
+//assign LEDS = {1'b1, resync, l1a_match, l1a, lct, ~trg_dcd, ~mtch_3bx, ~lat_12_5us};
 
 (* syn_useioff = "True" *)
 always @(negedge clk25ns)  // on falling edge
@@ -211,7 +215,7 @@ blkscam_i (
 	.OWADR(WADR),
 	.L1ANOUT(l1anout),
 	.STATUS(status),
-	.LEDS(LEDS)
+	.LEDS(blkscam_leds)
 );
 
 blkcpld   #(.TMR(TMR))

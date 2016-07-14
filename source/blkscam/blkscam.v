@@ -112,6 +112,7 @@ wire [7:0] l1p;
 wire [7:0] l1pout;
 wire [5:0] l1anum;
 wire [8:1] monitor;
+wire [7:0] nbaleds;
 
 initial
 begin
@@ -121,6 +122,8 @@ end
 assign STATUS = {busy,nodata,PUSH,pfifo1,tempty,empty_b,full3,full1,nl1ablk[5:0],nlct[5:0],nfree_blks};
 assign xload = full1 | full3;
 assign LASTWORD = lastwordd | xload;
+//assign LEDS = nbaleds;
+assign LEDS = {1'b1, empty_b, lctyena, nolct, selpathc, selpathb, selpatha, wrena};
 
 // Comment: Error message generation (Serious error need RESET from DAQMB to recover)
 //   SCA full, not a serious error, send 1011001, just overwrite the same SCA block, and the error bit is carried in the data stream.
@@ -207,7 +210,7 @@ nbadr_i(
 	.NFREE_BLKS(nfree_blks),
 	.LCTADR(lctadr),
 	.W(OWADR),
-	.LEDS(LEDS)
+	.LEDS(nbaleds)
 );
 
 fifo1 #(.TMR(TMR))

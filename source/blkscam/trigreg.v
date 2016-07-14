@@ -112,22 +112,27 @@ begin
 	if(MTCH_3BX==1) begin
 		lct_window = llout_m1 | llout0 | llout_p1;
 		l1a_window = L1A_MATCH | l1m1 | l1m2;
-		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout0 & !l1a_window;
-		pyes       = TRG_DCD ? l1m1           : llout0 &  l1a_window;
+//		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout0 & !l1a_window;
+//		pyes       = TRG_DCD ? l1m1           : llout0 &  l1a_window;
+		pno        = llout0 & !l1a_window;
+		pyes       = llout0 &  l1a_window;
 		no_match_1 = pno_p2;
 		matchr_1   = pyes_p2;
 	end
 	else begin
 		lct_window = llout_m1 | llout0 | llout_p1 | llout_p2 | llout_p3;
 		l1a_window = L1A_MATCH | l1m1 | l1m2 | l1m3 | l1m4;
-		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout_p2 & !l1a_window;
-		pyes       = TRG_DCD ? l1m1           : llout_p2 &  l1a_window;
+//		pno        = TRG_DCD ? (l1a1 & !l1m1) : llout_p2 & !l1a_window;
+//		pyes       = TRG_DCD ? l1m1           : llout_p2 &  l1a_window;
+		pno        = llout_p2 & !l1a_window;
+		pyes       = llout_p2 &  l1a_window;
 		no_match_1 = pno;
 		matchr_1   = pyes;
 	end
 end
 
-assign prematch      = TRG_DCD ? l1m1 : lct_window & l1m1;
+//assign prematch      = TRG_DCD ? l1m1 : lct_window & l1m1;
+assign prematch      = lct_window & l1m1;
 assign match_disable = overlap & !medge;
 assign pmatch        = prematch & !match_disable;
 assign pmiss         = prematch & match_disable;
